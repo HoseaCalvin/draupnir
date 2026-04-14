@@ -33,7 +33,7 @@ Inspired by Odin's multiplying ring, Draupnir aims to facilitate users in managi
 git clone https://github.com/HoseaCalvin/draupnir.git
 ```
 
-### 2. Change Directory
+### 2. Change directory
 
 ```bash
 cd draupnir
