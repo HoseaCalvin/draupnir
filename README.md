@@ -88,4 +88,4 @@ docker compose up
 - Develop chatbot for seamless interaction with Mimir (AI).
 - Develop Profile page, such as "Edit Profile" and "Delete Profile".
 - Improve Mimir (AI) by adding feature engineering, feature store, and guardrails.
-- Implement skeleton cards to enhance UI/UX."# draupnir" 
+- Implement skeleton cards to enhance UI/UX.
