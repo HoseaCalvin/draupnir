@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    // File Layout
+    "rootDir": "src",
+    "outDir": "dist",
+
+    // Environment Settings
+    "module": "NodeNext",
+    // 💡 ADD THIS: Specifies how modules are located
+    "moduleResolution": "NodeNext",
+    "target": "ES2022", // Set a specific, modern target
+    
+    // 💡 UNCOMMENT/ADD THESE: Necessary for Node.js types
+    "lib": ["ES2022"], 
+    "types": ["node"], 
+
+    // 💡 ADD THIS: Enables clean import syntax for CommonJS packages
+    "esModuleInterop": true, 
+
+    // Other Outputs
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+
+    // Recommended Options
+    "strict": true,
+    // 💡 REMOVE/DISABLE THIS: Conflicts with ts-node-dev module loading
+    // "verbatimModuleSyntax": true, 
+    "isolatedModules": true,
+    "noUncheckedSideEffectImports": true,
+    "moduleDetection": "force",
+    "skipLibCheck": true,
+    
+    // ... all other original settings remain ...
+  }
+}

@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@theme {
+  --inset-shadow-md: inset 0 1px 2px rgba(0, 0, 0, 0.18); 
+}
+
+body {
+  background-color: #EBEBEB;
+}
+
+.frame-padding {
+  @apply px-7 pt-7 pb-24 lg:px-11 lg:py-10 md:pl-[18rem] lg:pl-[21rem];
+}
+
+.menu-item {
+  @apply p-2 my-2 bg-[#9F7D38] hover:bg-[#8d6d2e] rounded-md text-white text-lg text-left text-shadow-sm font-normal cursor-pointer;
+}
+
+.menu-item-mobile {
+  @apply rounded-md text-white text-xs text-center cursor-pointer sm:text-sm;
+}
+
+.title-card {
+  @apply text-base text-[#7F7414] font-bold lg:px-3 lg:text-xl;
+}
+
+.information-logo {
+  @apply w-[1rem] h-auto cursor-pointer;
+}
+
+.draupnir-token {
+  @apply w-[8rem] h-auto;
+}
+
+.main-button {
+  @apply font-bold text-white bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg cursor-pointer;
+}
+
+.goal-target-text {
+  @apply bg-white text-gray-400 rounded-xl p-3.5 inset-shadow-md;
+}
+
+/* DayPicker Styles */
+
+.rdp {
+  --rdp-cell-size: 10px;
+  font-size: 7px;
+}
+
+.rdp-day {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+.rdp-table {
+  border-collapse: collapse;
+}
+
+.rdp-row,
+.rdp-head_row {
+  margin: 0;
+}
+
+.rdp-cell {
+  padding: 0;
+}
