@@ -20,7 +20,7 @@ Inspired by Odin's multiplying ring, Draupnir aims to facilitate users in managi
 ## ⚠️ Important
 
 * Ensure Docker is already installed in your system!
-* * This application uses NEON PostgreSQL as its database. Ensure you already have a NEON account.
+* This application uses NEON PostgreSQL as its database. Ensure you already have a NEON account.
 
 ## 🔧 Configuration
 
