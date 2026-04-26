@@ -20,7 +20,7 @@ Inspired by Odin's multiplying ring, Draupnir aims to facilitate users in managi
 ## ⚠️ Important
 
 * Ensure Docker is already installed in your system!
-* * This application uses NEON PostgreSQL as its database. Ensure you already have a NEON account.
+* This application uses NEON PostgreSQL as its database. Ensure you already have a NEON account.
 
 ## 🔧 Configuration
 
@@ -33,7 +33,7 @@ Inspired by Odin's multiplying ring, Draupnir aims to facilitate users in managi
 git clone https://github.com/HoseaCalvin/draupnir.git
 ```
 
-### 2. Change Directory
+### 2. Change directory
 
 ```bash
 cd draupnir
@@ -88,4 +88,4 @@ docker compose up
 - Develop chatbot for seamless interaction with Mimir (AI).
 - Develop Profile page, such as "Edit Profile" and "Delete Profile".
 - Improve Mimir (AI) by adding feature engineering, feature store, and guardrails.
-- Implement skeleton cards to enhance UI/UX."# draupnir" 
+- Implement skeleton cards to enhance UI/UX.
