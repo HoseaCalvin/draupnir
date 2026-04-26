@@ -6,14 +6,20 @@ export const insertFinance = async (req: Request, res: Response) => {
     const { user_id } = req.params;
     
     if(!user_id) {
-        return failedMessage(res, "user_id must not be empty!");
+        return failedMessage(res, "User ID is missing!");
     }
 
     try {
         const insertFinance = await sql`
             INSERT INTO "finance" (user_id, balance, deposit, expense, recorded_date)
                 VALUES (${user_id}, 0, 0, 0, CURRENT_DATE)
+            RETURNING
+                *
         `
+
+        if(insertFinance.length === 0) {
+            return failedMessage(res, "Failed to insert finance!");
+        }
 
         successMessage(res, insertFinance);
     } catch (error) {
@@ -25,7 +31,7 @@ export const getFinance = async (req: Request, res: Response) => {
     const { user_id } = req.params;
 
     if(!user_id) {
-        return failedMessage(res, "user_id must not be empty!");
+        return failedMessage(res, "User ID is missing!");
     }
 
     try {
@@ -41,7 +47,7 @@ export const getFinance = async (req: Request, res: Response) => {
         `
 
         if(getFinance.length === 0) {
-            return notFoundMesage(res, "user_id not found!");
+            return notFoundMesage(res, "User not found!");
         }
 
         successMessage(res, getFinance);
@@ -54,7 +60,7 @@ export const getFinanceDate = async (req: Request, res: Response) => {
     const { user_id } = req.params;
 
     if(!user_id) {
-        return notFoundMesage(res, "user_id must not be empty!");
+        return notFoundMesage(res, "User ID is missing!");
     }
 
     try {
@@ -66,8 +72,9 @@ export const getFinanceDate = async (req: Request, res: Response) => {
             WHERE
                 user_id = ${user_id}
         `
+
         if(getFinanceDate.length === 0) {
-            return notFoundMesage(res, "user_id not found!");
+            return notFoundMesage(res, "User not found!");
         }
 
         successMessage(res, getFinanceDate);
@@ -80,7 +87,7 @@ export const updateFinanceDate = async (req: Request, res: Response) => {
     const { user_id } = req.params;
     
     if(!user_id) {
-        return notFoundMesage(res, "user_id must not be empty!");
+        return notFoundMesage(res, "User ID is missing!");
     }
 
     try {
@@ -91,7 +98,13 @@ export const updateFinanceDate = async (req: Request, res: Response) => {
                 expense = 0
             WHERE
                 user_id = ${user_id}
+            RETURNING
+                *
         `
+
+        if(updateDate.length === 0) {
+            return failedMessage(res, "User not found!");
+        }
 
         successMessage(res, updateDate);
     } catch (error) {
@@ -103,7 +116,7 @@ export const deleteFinance = async (req: Request, res: Response) => {
     const { user_id } = req.params;
 
     if(!user_id) {
-        return failedMessage(res, "user_id is missing!");
+        return failedMessage(res, "User ID is missing!");
     }
 
     try {
@@ -116,7 +129,7 @@ export const deleteFinance = async (req: Request, res: Response) => {
         `
         
         if(deleteFinance.length === 0) {
-            return notFoundMesage(res, "user_id not found!");
+            return notFoundMesage(res, "User not found!");
         }
 
         successMessage(res, deleteFinance);

@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
-import AuthProvider from "@/contexts/AuthContext";
-import FinanceProvider from "@/contexts/FinanceContext";
-import ToastProvider from "@/contexts/ToastContext";
+import AuthProvider from "@/providers/AuthProvider";
+import FinanceProvider from "@/providers/FinanceProvider";
+import ToastProvider from "@/providers/ToastProvider";
 
 export const metadata: Metadata = {
   title: "Draupnir",
@@ -16,7 +16,7 @@ export default function RootLayout({ children }: Readonly<{children: React.React
       <body>
         <AuthProvider>
           <FinanceProvider>
-              { children }
+            { children }
           </FinanceProvider>
           <ToastProvider/>
         </AuthProvider>

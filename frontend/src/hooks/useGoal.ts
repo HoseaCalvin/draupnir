@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/providers/AuthProvider";
 
 import { UUID } from "crypto";
 import { api } from "@/lib/api";

@@ -2,20 +2,20 @@
 
 import React, { useEffect, useRef, useState } from "react"
 
-import { useAuth } from "@/contexts/AuthContext"
+import { useAuth } from "@/providers/AuthProvider"
 
 import { Transaction, TransactionCategory } from "@/hooks/useTransaction"
 import { DepositCard } from "@/hooks/useDeposit"
 
 import { useRupiahFormat } from "@/utils/currencyFormat"
-import { NumericFormat } from "react-number-format"
 
-import { DayPicker } from "react-day-picker"
+import { NumericFormat } from "react-number-format"
+import { DatePicker } from "react-datepicker"
 import { toast } from "react-toastify"
 
 import { api } from "@/lib/api"
 
-import "react-day-picker/style.css";
+import "react-datepicker/dist/react-datepicker.css";
 
 interface DepositInsertPopup {
     setIsPopupOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -41,26 +41,7 @@ export function DepositInsertPopup({ setIsPopupOpen, setDeposit, setTransactions
     const [categories, setCategories] = useState<TransactionCategory[]>([]);
     const [balance, setBalance] = useState<number>(0);
     const [interest, setInterest] = useState<number>(0);
-    const [deadline, setDeadline] = useState<Date | undefined>();
-
-    const [openCalendar, setOpenCalendar] = useState<boolean>(false);
-
-    const calendarRef = useRef<HTMLDivElement | null>(null);
-    useEffect(() => {
-        const closeCalendar = (event: MouseEvent) => {
-            if(calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
-                setOpenCalendar(false);
-            }
-        }
-
-        if(openCalendar) {
-            document.addEventListener("mousedown", closeCalendar);
-        }
-
-        return () => {
-            document.removeEventListener("mousedown", closeCalendar);
-        }
-    }, [openCalendar]);
+    const [deadline, setDeadline] = useState<Date | null>(null);
     
     useEffect(() => {
         const handleGetTransactionCategories = async () => {
@@ -114,7 +95,7 @@ export function DepositInsertPopup({ setIsPopupOpen, setDeposit, setTransactions
 
                 toast.success(`Successfully added ${useRupiahFormat(balance)} into deposit!`)
             }
-        } catch (error: any) {
+        } catch (error) {
             console.error("Error in updating log or balance", error);
             toast.error("There is an error while updating balance, try again!");      
         }
@@ -170,31 +151,13 @@ export function DepositInsertPopup({ setIsPopupOpen, setDeposit, setTransactions
                     </section>
                     <section className="space-y-1 max-w-[350px]">
                         <p className="text-xs md:text-sm">Deadline</p>
-                        <input readOnly onClick={() => setOpenCalendar(!openCalendar)} value={deadline ? deadline.toDateString() : "Not yet picked"} className="bg-white block w-full border-2 text-sm rounded-lg p-1 cursor-pointer md:text-base md:p-2"/>
-                        { openCalendar &&
-                            <div ref={calendarRef} className="absolute mt-2 bottom-[70px] right-0.5 lg:bottom-[70px] lg:-right-4">
-                                <DayPicker
-                                    mode="single"
-                                    fixedWeeks
-                                    classNames={{
-                                        root: "text-xs w-full",
-                                        day: "w-7 h-7 md:w-8 md:w-8",
-                                        selected: "text-sm font-bold text-[#C39F4A]",
-                                        head_cell: "text-[11px]",
-                                        cell: "p-0 m-0 w-8 h-8",
-                                        table: "w-full border-collapse mx-auto",
-                                        caption_label: "text-sm font-bold mb-4.5 text-[#9c854e] lg:text-base",
-
-                                    }}                        
-                                    selected={deadline}
-                                    onSelect={(date) => {
-                                        setDeadline(date);
-                                        setOpenCalendar(!openCalendar);
-                                    }}
-                                    className="bg-white border-gray-400 border rounded-lg text-sm p-2"
-                                />
-                            </div>
-                        }
+                        <DatePicker
+                            selected={deadline}
+                            onChange={setDeadline}
+                            fixedHeight
+                            calendarClassName="custom-calendar"
+                            className="bg-white border-2 rounded-lg cursor-pointer p-1 w-full text-sm md:p-2 lg:text-base"
+                        />
                     </section>
                     <button type="submit" className="bg-[#C39F4A] cursor-pointer rounded-md mt-4 px-8 py-1.5 text-white text-sm font-semibold md:text-base">Add</button>
                 </form>

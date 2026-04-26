@@ -9,8 +9,8 @@ import FinancialAnalysis from "@/components/FinancialAnalysis";
 
 import { WalletIcon, ExpenseIcon, CashflowIcon } from "@/components/SVGIcons";
 
-import { useFinance } from "@/contexts/FinanceContext";
-import { useAuth } from "@/contexts/AuthContext";
+import { useFinance } from "@/providers/FinanceProvider";
+import { useAuth } from "@/providers/AuthProvider";
 
 import { toast } from "react-toastify";
 

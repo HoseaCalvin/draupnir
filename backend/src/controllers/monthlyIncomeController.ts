@@ -18,8 +18,8 @@ export const insertMonthlyIncome = async (req: Request, res: Response) => {
                 *
         `
 
-        if(!insertIncome) {
-            return failedMessage(res, "One of the fields is missing!");
+        if(insertIncome.length === 0) {
+            return failedMessage(res, "Failed to insert an Income Item!");
         }
 
         successMessage(res, insertIncome[0]);
@@ -30,7 +30,7 @@ export const insertMonthlyIncome = async (req: Request, res: Response) => {
 
 export const addIncomeToBalance = async (user_id: string) => {
     if(!user_id) {
-        console.log("user_id is missing!");
+        console.log("User ID is missing!");
     }
 
     try {
@@ -52,7 +52,7 @@ export const addIncomeToBalance = async (user_id: string) => {
 
         return appendBalance;
     } catch (error) {
-        console.error("Error in adding income to your balance!", error);
+        console.error("There was an error while adding income to your balance!", error);
     }
 }
 
@@ -60,7 +60,7 @@ export const getMonthlyIncome = async (req: Request, res: Response) => {
     const { user_id } = req.params;
 
     if(!user_id) {
-        return failedMessage(res, "user_id is missing!");
+        return failedMessage(res, "User ID is missing!");
     }
 
     try {
@@ -83,7 +83,7 @@ export const deleteMonthlyIncome = async (req: Request, res: Response) => {
     const { id, user_id } = req.body;
 
     if(!id || !user_id) {
-        return failedMessage(res, "id or user_id is missing!");
+        return failedMessage(res, "All fields are required!");
     }
 
     try {
@@ -93,10 +93,12 @@ export const deleteMonthlyIncome = async (req: Request, res: Response) => {
             WHERE
                 id = ${id} AND
                 user_id = ${user_id}
+            RETURNING
+                *
         `
 
-        if(!deleteIncome) {
-            return notFoundMesage(res, "user_id not found!");
+        if(deleteIncome.length === 0) {
+            return notFoundMesage(res, "User or Income Item not found!");
         }
 
         successMessage(res, deleteIncome);

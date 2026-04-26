@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useContext, createContext } from "react";
 
-import { useAuth } from "./AuthContext";
+import { useAuth } from "./AuthProvider";
 import { api } from "@/lib/api";
 
 type FinanceContextType = {

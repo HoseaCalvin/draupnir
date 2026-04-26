@@ -7,20 +7,20 @@ import Popup from "@/components/Popup";
 
 import type { Goal } from "@/hooks/useGoal";
 
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/providers/AuthProvider";
 import useGoal from "@/hooks/useGoal";
-import { useFinance } from "@/contexts/FinanceContext";
+import { useFinance } from "@/providers/FinanceProvider";
 
 import { CircularProgress, LinearProgress } from "@mui/material";
 import { toast } from "react-toastify";
 import { NumericFormat } from "react-number-format";
-import { DayPicker } from "react-day-picker";
+import DatePicker from "react-datepicker";
 
 import { useRupiahFormat } from "@/utils/currencyFormat";
 import { UUID } from "crypto";
 import { api } from "@/lib/api";
 
-import "react-day-picker/style.css";
+import "react-datepicker/dist/react-datepicker.css";
 
 type GoalCardType = {
     setOpenGoalCard: React.Dispatch<SetStateAction<boolean>>;
@@ -140,11 +140,11 @@ function Goals() {
                                             />
                                         </div>
                                         <div className="flex flex-col justify-between gap-x-4 gap-y-4 w-full xl:flex-row">
-                                            <div className="bg-[#FFFDF0] border-2 border-gray-200 shadow-md rounded-lg w-full py-2 lg:p-2.5">
+                                            <div className="bg-[#FFFDF0] border-2 border-gray-300 shadow-sm rounded-lg w-full py-2 lg:p-2.5">
                                                 <h3 className="font-semibold text-center text-sm">Target</h3>
                                                 <p className="font-semibold text-center text-base lg:text-xl">{useRupiahFormat(goal.target_balance)}</p>
                                             </div>
-                                            <div className="bg-[#FFFDF0] border-2 border-gray-200 shadow-md rounded-lg w-full py-2 lg:p-2.5">
+                                            <div className="bg-[#FFFDF0] border-2 border-gray-300 shadow-sm rounded-lg w-full py-2 lg:p-2.5">
                                                 <h3 className="font-semibold text-center text-sm">Deadline</h3>
                                                 <p className="font-semibold text-center text-base lg:text-xl">{new Date(goal.deadline).toLocaleDateString()}</p>
                                             </div>
@@ -168,27 +168,7 @@ function CreateGoalCard({ setOpenGoalCard }: GoalCardType) {
 
     const [name, setName] = useState<string>('');
     const [targetBalance, setTargetBalance] = useState<number>(0);
-    const [deadline, setDeadline] = useState<Date | undefined>();
-
-    const [openCalendar, setOpenCalendar] = useState<boolean>(false);
-
-    const calendarRef = useRef<HTMLDivElement | null>(null);
-
-    useEffect(() => {
-        const closeCalendar = (event: MouseEvent) => {
-            if(calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
-                setOpenCalendar(false);
-            }
-        }
-
-        if(openCalendar) {
-            document.addEventListener("mousedown", closeCalendar);
-        }
-
-        return () => {
-            document.removeEventListener("mousedown", closeCalendar);
-        }
-    }, [openCalendar]);
+    const [deadline, setDeadline] = useState<Date | null>(null);
 
     const submitForm = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -203,7 +183,7 @@ function CreateGoalCard({ setOpenGoalCard }: GoalCardType) {
             return;
         }
 
-        if(deadline && deadline?.getTime() < Date.now()) {
+        if(deadline && deadline.getTime() < Date.now()) {
             toast.error("Deadline must always be later than the current date!");
             return;
         }
@@ -237,13 +217,13 @@ function CreateGoalCard({ setOpenGoalCard }: GoalCardType) {
                     <p className="text-3xl cursor-pointer" onClick={() => setOpenGoalCard(false)}>&times;</p>
                 </header>
                 <hr />
-                <form onSubmit={submitForm} className="relative space-y-3 py-4 lg:py-3">
+                <form onSubmit={submitForm} className=" space-y-3 py-4 lg:py-3">
                     <div className="space-y-1">
-                        <p className="font-semibold text-xs py-0.5 md:text-sm">Goal Name:</p>
+                        <p className="font-semibold text-xs py-0.5 md:text-sm">Goal Name</p>
                         <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Goal Title" className="bg-white block border-2 rounded-lg py-1 px-2 w-full text-sm md:w-3/4 lg:text-base"/>
                     </div>
                     <div className="space-y-1">
-                        <p className="font-semibold text-xs py-0.5 md:text-sm">Target Balance:</p>
+                        <p className="font-semibold text-xs py-0.5 md:text-sm">Target Balance</p>
                         <NumericFormat
                             value={targetBalance}
                             thousandSeparator="."
@@ -256,38 +236,15 @@ function CreateGoalCard({ setOpenGoalCard }: GoalCardType) {
                         />
                     </div>
                     <div className="space-y-1">
-                        <p className="font-semibold text-xs py-0.5 md:text-sm">Deadline:</p>
-                        <input readOnly onClick={() => setOpenCalendar(!openCalendar)} value={deadline ? deadline.toDateString() : "Not yet picked"} className="bg-white block border-2 rounded-lg cursor-pointer py-1 px-2 w-full text-sm md:w-3/4 lg:text-base"/>
-                        { openCalendar &&
-                            <div ref={calendarRef} className="absolute mt-2 bottom-17 -right-4">
-                                <DayPicker
-                                    mode="single"
-                                    fixedWeeks
-                                    classNames={{
-                                        root: "text-xs",
-                                        day: "w-7 h-7 lg:w-8 lg:w-8",
-                                        selected: "text-sm font-bold text-[#C39F4A]",
-                                        head_cell: "text-[11px]",
-                                        cell: "p-0 m-0 w-8 h-8",
-                                        table: "w-full border-collapse mx-auto",
-                                        caption_label: "text-sm font-bold mb-4.5 text-[#9c854e] lg:text-base",
-                                        nav_icon: "h-3 w-3 fill-current ",
-                                    }}                        
-                                    selected={deadline}
-                                    onSelect={(date) => {
-                                        setDeadline(date);
-                                        setOpenCalendar(!openCalendar);
-                                    }}
-                                    className="bg-white border-gray-400 border rounded-lg text-sm p-2"
-                                />
-                            </div>
-                        }
+                        <p className="font-semibold text-xs py-0.5 md:text-sm">Deadline</p>
+                        <DatePicker
+                            selected={deadline}
+                            onChange={setDeadline}
+                            fixedHeight
+                            calendarClassName="custom-calendar"
+                            className="bg-white border-2 rounded-lg cursor-pointer py-1 px-2 w-full text-sm md:w-3/4 lg:text-base"
+                        />
                     </div>
-                    {/* { deadline &&
-                        <div className="bg-[#C9BE7C] rounded-lg my-5 px-3 py-2 w-3/4">
-                            <p className="text-white font-semibold">Estimated Balance: {useRupiahFormat(targetBalance * deadline.getMonth())}</p>
-                        </div>
-                    } */}
                     <div className="pt-2.5 gap-x-3">
                         <button type="submit" className="main-button px-5 py-1.5 text-sm md:text-base">Create</button>
                     </div>
@@ -302,11 +259,7 @@ function EditGoalCard({ goalCollection, setOpenEditGoalCard }: EditGoalCardType)
 
     const [name, setName] = useState<string>("");
     const [balance, setBalance] = useState<number>(0);
-    const [deadline, setDeadline] = useState<Date | undefined>();
-    
-    const [openCalendar, setOpenCalendar] = useState<boolean>(false);
-
-    const calendarRef = useRef<HTMLDivElement | null>(null);
+    const [deadline, setDeadline] = useState<Date | null>(null);
 
     useEffect(() => {
         const fetchGoal = async () => {
@@ -324,22 +277,6 @@ function EditGoalCard({ goalCollection, setOpenEditGoalCard }: EditGoalCardType)
 
         fetchGoal();
     }, []);
-
-    useEffect(() => {
-        const closeCalendar = (event: MouseEvent) => {
-            if(calendarRef.current && !calendarRef.current.contains(event.target as Node)) {
-                setOpenCalendar(false);
-            }
-        }
-
-        if(openCalendar) {
-            document.addEventListener("mousedown", closeCalendar);
-        }
-
-        return () => {
-            document.removeEventListener("mousedown", closeCalendar);
-        }
-    }, [openCalendar]);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -391,11 +328,11 @@ function EditGoalCard({ goalCollection, setOpenEditGoalCard }: EditGoalCardType)
                 <hr />
                 <div className="relative space-y-3 py-4 lg:py-3">
                     <div className="space-y-1">
-                        <p className="font-semibold text-xs py-0.5 md:text-sm">Goal Name:</p>
+                        <p className="font-semibold text-xs py-0.5 md:text-sm">Goal Name</p>
                         <input type="text" placeholder="e.g. Buy groceries" value={name} onChange={(e) => setName(e.target.value)} className="bg-white block border-2 rounded-lg py-1 px-2 w-full text-sm md:w-3/4 lg:text-base"/>
                     </div>
                     <div className="space-y-1">
-                        <p className="font-semibold text-xs py-0.5 md:text-sm">Target Balance:</p>
+                        <p className="font-semibold text-xs py-0.5 md:text-sm">Target Balance</p>
                         <NumericFormat
                             value={balance}
                             thousandSeparator="."
@@ -408,32 +345,14 @@ function EditGoalCard({ goalCollection, setOpenEditGoalCard }: EditGoalCardType)
                         />
                     </div>
                     <div className="space-y-1">
-                        <p className="font-semibold text-xs py-0.5 md:text-sm">Deadline:</p>
-                        <input readOnly onClick={() => setOpenCalendar(!openCalendar)} value={deadline ? deadline.toDateString() : "Not yet picked"} className="bg-white block border-2 rounded-lg cursor-pointer py-1 px-2 w-full text-sm md:w-3/4 lg:text-base"/>
-                        { openCalendar &&
-                            <div ref={calendarRef} className="absolute mt-2 top-[-50px] -right-4 lg:top-[-18px] lg:-right-2">
-                                <DayPicker
-                                    mode="single"
-                                    fixedWeeks
-                                    classNames={{
-                                        root: "text-xs",
-                                        day: "w-7 h-7 lg:w-8 lg:w-8",
-                                        selected: "text-sm font-bold text-[#C39F4A]",
-                                        head_cell: "text-[11px]",
-                                        cell: "p-0 m-0 w-8 h-8",
-                                        table: "w-full border-collapse mx-auto",
-                                        caption_label: "text-sm font-bold mb-4.5 text-[#9c854e] lg:text-base",
-                                        nav_icon: "h-3 w-3 fill-current ",
-                                    }}                        
-                                    selected={deadline}
-                                    onSelect={(date) => {
-                                        setDeadline(date);
-                                        setOpenCalendar(!openCalendar);
-                                    }}
-                                    className="bg-white border-gray-400 border rounded-lg text-sm p-2"
-                                />
-                            </div>
-                        }
+                        <p className="font-semibold text-xs py-0.5 md:text-sm">Deadline</p>
+                        <DatePicker
+                            selected={deadline}
+                            onChange={setDeadline}
+                            fixedHeight
+                            calendarClassName="custom-calendar"
+                            className="bg-white border-2 rounded-lg cursor-pointer py-1 px-2  w-full text-sm md:w-3/4 lg:text-base"
+                        />
                     </div>
                     <div className="flex gap-x-2.5 pt-2">
                         <button type="submit" className="main-button px-5 py-1.5 text-sm md:text-base">Submit</button>

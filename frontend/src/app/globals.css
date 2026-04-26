@@ -21,7 +21,7 @@ body {
 }
 
 .title-card {
-  @apply text-base text-[#7F7414] font-bold lg:px-3 lg:text-xl;
+  @apply text-[14px] text-[#7F7414] font-bold md:text-base lg:px-3 lg:text-xl;
 }
 
 .information-logo {
@@ -40,27 +40,43 @@ body {
   @apply bg-white text-gray-400 rounded-xl p-3.5 inset-shadow-md;
 }
 
-/* DayPicker Styles */
+/* DatePicker Styles */
 
-.rdp {
-  --rdp-cell-size: 10px;
-  font-size: 7px;
+.react-datepicker {
+  @apply border-2 rounded-lg border-black;
 }
 
-.rdp-day {
-  width: 20px !important;
-  height: 20px !important;
+.react-datepicker__header {
+  @apply bg-white border-b-2;
 }
 
-.rdp-table {
-  border-collapse: collapse;
+.react-datepicker-wrapper {
+  width: 100%;
 }
 
-.rdp-row,
-.rdp-head_row {
-  margin: 0;
+.react-datepicker__input-container {
+  width: 100%;
 }
 
-.rdp-cell {
-  padding: 0;
+.custom-calendar .react-datepicker__header {
+  background-color: #C39F4A;
+  padding: 10px ;
+}
+
+.custom-calendar .react-datepicker__current-month {
+  color: #ffffff !important;
+  font-weight: bold !important;
+}
+
+.custom-calendar .react-datepicker__day-name {
+  color: #000000 !important;
+}
+
+.custom-calendar .react-datepicker__navigation-icon::before {
+  border-color: white; /* change arrow color */
+}
+
+.custom-calendar .react-datepicker__navigation:hover
+  .react-datepicker__navigation-icon::before {
+  border-color: #d4d4d4;
 }

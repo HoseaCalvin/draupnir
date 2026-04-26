@@ -1,119 +1,89 @@
 import { Request, Response } from "express";
 import { sql } from "../configs/database";
-import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 
 import { notFoundMesage, serverErrorMessage, successMessage, failedMessage } from '../misc/messages'
 
-export const login = async (req: Request, res: Response) => {
-    const { username, password } = req.body;
+export const verifyUser = async (req: Request, res: Response) => {
+    const { user_id, password } = req.body;
 
-    if(!username || !password) {
+    if(!user_id || !password) {
         return failedMessage(res, "All fields are required!");
+    }
+
+    if(!password || password.trim().length <= 0) {
+        return failedMessage(res, "Password must not be empty!");
     }
 
     try {
         const getUser = await sql`
             SELECT
                 id,
-                username,
-                dob,
-                gender
+                password
             FROM
                 "user"
             WHERE
-                username = ${username} AND
-                password = ${password}
+                id = ${user_id}
             LIMIT 1
         `
 
         if(getUser.length === 0) {
+            return failedMessage(res, "User not found!");
+        }
+
+        const user = getUser[0];
+        const isPasswordMatch = await bcrypt.compare(password, user.password);
+
+        if(!isPasswordMatch) {
             return failedMessage(res, "Invalid credentials!");
         }
 
-        if(getUser.length > 0) {
-            const token = jwt.sign(
-                { 
-                    user: getUser[0]
-                }, 
-                process.env.JWT_SECRET!, 
-                { 
-                    expiresIn: "12h" 
-                }
-            );
-
-            res.cookie('token', token, {
-                httpOnly: true,
-                secure: false,
-                sameSite: 'lax',
-                path: '/'
-            });
-
-            return res.status(200).json({
-                success: true,
-                user: getUser[0]
-            });            
-        }
-    } catch (error) {
-        serverErrorMessage(res);        
-    }
-}
-
-export const verifyUser = async (req: Request, res: Response) => {
-    const { user_id, password } = req.body;
-
-    if(!user_id || !password) {
-        return failedMessage(res, "Password is required!");
-    }
-
-    try {
-        const getUser = await sql`
-            SELECT
-                id
-            FROM
-                "user"
-            WHERE
-                id = ${user_id} AND
-                password = ${password}
-            LIMIT 1
-        `
-
-        if(getUser.length === 0) {
-            return failedMessage(res, "Invalid credentials!");
-        }
-
-        successMessage(res, getUser[0]);
+        successMessage(res, {
+            user: {
+                id: user.id
+            }
+        });
     } catch (error) {
         serverErrorMessage(res);
     }
 }
 
 export const register = async (req: Request, res: Response) => {
-    const { username, dob, gender, password } = req.body;
+    const { username, email, dob, gender, password } = req.body;
 
-    if(!username || !dob || !gender || !password) {
+    if(!username || !email || !dob || !gender || !password) {
         return failedMessage(res, "All fields are required!");
     }
 
+    if(username.trim().length <= 0) {
+        return failedMessage(res, "Username must not be empty!");
+    }
+
+    if(email.trim().length <= 0) {
+        return failedMessage(res, "Email must not be empty!");
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     try {
         const insertUser = await sql`
-            INSERT INTO "user" (username, dob, gender, password, created_at)
-                VALUES (${username}, ${dob}, ${gender}, ${password}, CURRENT_DATE)
+            INSERT INTO "user" (username, email, dob, gender, password)
+                VALUES (${username}, ${email}, ${dob}, ${gender}, ${hashedPassword})
             RETURNING
                 "id";
         `
 
         if(insertUser) {
             await sql`
-                INSERT INTO finance (user_id, balance, emergency_fund, expense)
+                INSERT INTO finance (user_id, balance, deposit, expense)
                     VALUES (${insertUser[0].id}, 0, 0, 0)
             `
-
-            successMessage(res, insertUser[0]);
-        } else {
-            return failedMessage(res, "Error in creating 'finance' table!")
         }
+
+        successMessage(res, insertUser[0]);
     } catch (error) {
         serverErrorMessage(res);
+        console.error("Error in registering user!", error);
     }
 }
 
@@ -126,34 +96,110 @@ export const getAllUsers = async () => {
     `
 
     if(getUsers.length === 0) {
-        console.log("No users found!");
+        console.log("No Users found!");
     }
 
     return getUsers;
 }
 
-export const updateUser = async (req: Request, res: Response) => {
+export const updateUserBiodata = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { username, dob, gender, password } = req.body;
+    const { username, dob, gender } = req.body;
+
+    if(!username || !dob || !gender) {
+        return failedMessage(res, "All fields are required!");
+    }
+
+    if(username.trim().length <= 0) {
+        return failedMessage(res, "Username must not be empty!");
+    }
 
     try {
-        const updateUser = await sql`
+        const updateUserBiodata = await sql`
             UPDATE "user"
             SET
                 username = ${username},
                 dob = ${dob},
-                gender = ${gender},
-                password = ${password}
+                gender = ${gender}
             WHERE
                 id = ${id}
-            RETURNING *
+            RETURNING 
+                *
         `
 
-        if(updateUser.length === 0) {
+        if(updateUserBiodata.length === 0) {
             return notFoundMesage(res, "User not found!");
         }
 
-        successMessage(res, updateUser);
+        successMessage(res, updateUserBiodata[0]);
+    } catch (error) {
+        serverErrorMessage(res);
+    }
+}
+
+export const updateUserEmail = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { email } = req.body;
+    
+    if(!id || !email) {
+        return failedMessage(res, "All fields are required!");
+    }
+
+    if(email.trim().length <= 0) {
+        return failedMessage(res, "Email must not be empty!");
+    }
+
+    try {
+        const updateUserEmail = await sql`
+            UPDATE "user"
+            SET
+                email = ${email}
+            WHERE
+                id = ${id}
+            RETURNING 
+                *
+        `
+
+        if(updateUserEmail.length === 0) {
+            return notFoundMesage(res, "User not found!");
+        }
+
+        successMessage(res, updateUserEmail[0]);        
+    } catch (error) {
+        serverErrorMessage(res);
+    }
+}
+
+export const updateUserPassword = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const { password, confirmPassword } = req.body;
+    
+    if(!id || !password || !confirmPassword) {
+        return failedMessage(res, "All fields are required!");
+    }
+
+    if(password !== confirmPassword && confirmPassword.trim().length > 0) {
+        return failedMessage(res, "Passwords must match!");
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    try {
+        const updateUserPassword = await sql`
+            UPDATE "user"
+            SET
+                password = ${hashedPassword}
+            WHERE
+                id = ${id}
+            RETURNING 
+                *
+        `
+
+        if(updateUserPassword.length === 0) {
+            return notFoundMesage(res, "User not found!");
+        }
+
+        successMessage(res, updateUserPassword[0]);        
     } catch (error) {
         serverErrorMessage(res);
     }
@@ -161,12 +207,18 @@ export const updateUser = async (req: Request, res: Response) => {
 
 export const deleteUser = async (req: Request, res: Response) => {
     const { id } = req.params;
+    const { email } = req.body;
 
+    if(!id || !email) {
+        return failedMessage(res, "All fields are required!");
+    }
+    
     try {
         const deleteUser = await sql`
             DELETE FROM "user"
             WHERE
                 id = ${id}
+                AND email = ${email}
             RETURNING
                 *
         `
@@ -175,7 +227,7 @@ export const deleteUser = async (req: Request, res: Response) => {
             return notFoundMesage(res, "User not found!");
         }
 
-        successMessage(res, deleteUser);
+        successMessage(res, deleteUser[0]);
     } catch (error) {
         serverErrorMessage(res);
     }

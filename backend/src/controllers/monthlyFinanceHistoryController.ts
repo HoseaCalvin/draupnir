@@ -5,7 +5,7 @@ import { failedMessage, notFoundMesage, serverErrorMessage, successMessage } fro
 
 export const insertHistory = async (user_id: string) => {
     if(!user_id) {
-        console.log("user_id is null!");
+        console.log("User ID is missing!");
         return;
     }
 
@@ -22,18 +22,20 @@ export const insertHistory = async (user_id: string) => {
                 FROM
                     finance
                 WHERE
-                    user_id = ${user_id} AND 
+                    user_id = ${user_id} 
                     AND recorded_date >= date_trunc('month', CURRENT_DATE) - INTERVAL '1 month'
                     AND recorded_date < date_trunc('month', CURRENT_DATE)
+            RETURNING
+                *
         `
 
-        if(!insert) {
-            console.log("user_id not found!");
+        if(insert.length === 0) {
+            console.log("User not found!");
             return;
         }
 
     } catch (error) {
-        console.error("There was an error in generating your financial report!");
+        console.error("There was an error while generating your financial report!");
     }
 }
 
@@ -41,7 +43,7 @@ export const getHistory = async (req: Request, res: Response) => {
     const { user_id } = req.params;
 
     if(!user_id) {
-        return notFoundMesage(res, "user_id must not be empty!");
+        return notFoundMesage(res, "User ID is missing!");
     }    
 
     try {

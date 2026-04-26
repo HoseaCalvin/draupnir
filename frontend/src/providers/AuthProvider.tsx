@@ -9,6 +9,7 @@ type User = {
     id: string,
     username: string,
     dob: Date,
+    email: string,
     gender: string,
 }
 
@@ -57,7 +58,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (username: string, password: string) => {
         try {
-            const response = await api.post(`/api/users/login`, 
+            const response = await api.post(`/api/auth/login`, 
                 { 
                     username, 
                     password 

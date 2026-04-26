@@ -13,7 +13,7 @@ import ProfilePicture from "@/assets/navbar/viking-face.svg";
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/providers/AuthProvider";
 import { usePathname } from "next/navigation";
 
 function Sidebar() {

@@ -2,12 +2,11 @@
 
 import React, { useEffect, useState } from "react"
 
-import { useAuth } from "@/contexts/AuthContext"
+import { useAuth } from "@/providers/AuthProvider"
 
 import { MonthlyIncome } from "@/hooks/useMonthlyIncome"
 
 import { NumericFormat } from "react-number-format"
-import { useRupiahFormat } from "@/utils/currencyFormat"
 import { toast } from "react-toastify"
 import { api } from "@/lib/api"
 

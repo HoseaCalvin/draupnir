@@ -6,8 +6,12 @@ import { failedMessage, notFoundMesage, serverErrorMessage, successMessage } fro
 export const insertTransactionLog = async (req: Request, res: Response) => {
     const { user_id, recorded_date, transaction_name, amount, category_id } = req.body;
 
-    if(!user_id || !recorded_date || !transaction_name) {
+    if(!user_id || !recorded_date || !transaction_name || !category_id) {
         return failedMessage(res, "All fields are required!");
+    }
+
+    if(amount <= 0) {
+        return failedMessage(res, "Amount must have a value more than zero!");
     }
 
     try {
@@ -17,6 +21,10 @@ export const insertTransactionLog = async (req: Request, res: Response) => {
             RETURNING 
                 *
         `
+
+        if(!insertLog) {
+            return failedMessage(res, "Failed to insert a transaction log!");
+        }
 
         successMessage(res, insertLog);
     } catch (error) {
@@ -29,7 +37,7 @@ export const getAllTransactionLog = async (req: Request, res: Response) => {
     const { range } = req.query;
 
     if(!user_id) {
-        return failedMessage(res, "user_id is missing!");
+        return failedMessage(res, "User ID is missing!");
     }
 
     try {
@@ -92,10 +100,6 @@ export const getAllTransactionLog = async (req: Request, res: Response) => {
             ORDER BY 
                 recorded_date DESC, transaction_name
         `;
-            
-        if(!getLog) {
-            return notFoundMesage(res, "Couldn't find user's transaction logs!");
-        }
         
         successMessage(res, getLog);
     } catch (error) {
@@ -107,7 +111,7 @@ export const getTransactionLog = async (req: Request, res: Response) => {
     const { user_id } = req.params;
 
     if(!user_id) {
-        return failedMessage(res, "user_id is missing!");
+        return failedMessage(res, "User ID is missing!");
     }
 
     try {
@@ -122,10 +126,6 @@ export const getTransactionLog = async (req: Request, res: Response) => {
                 user_id = ${user_id} AND
                 recorded_date = CURRENT_DATE
         `
-
-        if(!getLog) {
-           return notFoundMesage(res, "Couldn't find user's transaction logs!");
-        }
         
         successMessage(res, getLog);
     } catch (error) {

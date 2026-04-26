@@ -6,7 +6,7 @@ import { useRupiahFormat } from "@/utils/currencyFormat";
 
 import { toast } from "react-toastify";
 import { DepositWithdrawPopup } from "@/components/DepositPopup";
-import { useFinance } from "@/contexts/FinanceContext";
+import { useFinance } from "@/providers/FinanceProvider";
 import useDeposit from "@/hooks/useDeposit";
 
 export type DepositCard = {

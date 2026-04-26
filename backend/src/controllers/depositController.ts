@@ -6,6 +6,10 @@ import { serverErrorMessage, failedMessage, successMessage, notFoundMesage } fro
 export const getDepositByUserId = async (req: Request, res: Response) => {
     const { user_id } = req.params;
 
+    if(!user_id) {
+        return failedMessage(res, "User ID is missing!");
+    }
+
     try {
         const getDepositByUserId = await sql`
             SELECT
@@ -26,12 +30,12 @@ export const reduceDeposit = async (req: Request, res: Response) => {
     const { user_id } = req.params;
     const { deposit } = req.body;
 
-    if(!deposit) {
-        return failedMessage(res, "Deposit must have a value!");
+    if(!deposit || deposit <= 0) {
+        return failedMessage(res, "Deposit must have a value more than zero!");
     }
 
     if(!user_id) {
-        return failedMessage(res, "User id is missing!");
+        return failedMessage(res, "User ID is missing!");
     }
 
     try {
@@ -45,8 +49,8 @@ export const reduceDeposit = async (req: Request, res: Response) => {
                 *
         `
 
-        if(!reduceDeposit) {
-            return notFoundMesage(res, "No deposit found!");
+        if(reduceDeposit.length === 0) {
+            return notFoundMesage(res, "User not found!");
         }
 
         successMessage(res, reduceDeposit);
@@ -59,12 +63,12 @@ export const updateDeposit = async (req: Request, res: Response) => {
     const { user_id } = req.params;
     const { deposit } = req.body;
 
-    if(!deposit) {
-        return failedMessage(res, "Deposit must have a value!");
+    if(!deposit || deposit <= 0) {
+        return failedMessage(res, "Deposit must have a value more than zero!");
     }
 
     if(!user_id) {
-        return failedMessage(res, "user_id is missing!");
+        return failedMessage(res, "User ID is missing!");
     }
 
     try {
@@ -79,8 +83,8 @@ export const updateDeposit = async (req: Request, res: Response) => {
                 *
         `
 
-        if(!updateDeposit) {
-            return notFoundMesage(res, "No deposit found!");
+        if(updateDeposit.length === 0) {
+            return notFoundMesage(res, "User not found!");
         }
 
         successMessage(res, updateDeposit);
@@ -92,17 +96,27 @@ export const updateDeposit = async (req: Request, res: Response) => {
 export const insertDepositList = async (req: Request, res: Response) => {
     const { user_id, bank_name, deposit_category, interest, amount, deadline } = req.body;
 
-    if(!user_id || !bank_name || !deposit_category || interest <= 0 || amount <= 0 || !deadline) {
+    if(!user_id || !bank_name || !deposit_category || !interest || !amount || !deadline) {
         return failedMessage(res, "All fields are required");
+    }
+
+    if(interest <= 0) {
+        return failedMessage(res, "Interest must have a value more than zero!");
+    }
+
+    if(amount <= 0) {
+        return failedMessage(res, "Amount must have a value more than zero!");
     }
 
     try {
         const insertDeposit = await sql`
             INSERT INTO deposit_list (user_id, bank_name, deposit_category, interest, amount, deadline)
-                VALUES (${user_id}, ${bank_name}, ${deposit_category}, ${interest}, ${amount}, ${deadline});
+                VALUES (${user_id}, ${bank_name}, ${deposit_category}, ${interest}, ${amount}, ${deadline})
+            RETURNING
+                *
         `
 
-        if(!insertDeposit) {
+        if(insertDeposit.length === 0) {
             return failedMessage(res, "Failed to insert a deposit");
         }
 
@@ -116,7 +130,7 @@ export const getDepositList = async (req: Request, res: Response) => {
     const { user_id } = req.params;
 
     if(!user_id) {
-        return failedMessage(res, "user_id is missing!");
+        return failedMessage(res, "User ID is missing!");
     }
 
     try {
@@ -146,7 +160,7 @@ export const deleteDepositList = async (req: Request, res: Response) => {
     const { deposit_id } = req.body;
 
     if(!deposit_id || !user_id) {
-        return failedMessage(res, "deposit_id or user_id is missing!");
+        return failedMessage(res, "All fields are required!");
     }
 
     try {
@@ -156,10 +170,12 @@ export const deleteDepositList = async (req: Request, res: Response) => {
             WHERE
                 id = ${deposit_id} 
                 AND user_id = ${user_id}
+            RETURNING
+                *
         `
 
-        if(!deleteDeposit) {
-            return failedMessage(res, "deposit_id or user_id not found!");
+        if(deleteDeposit.length === 0) {
+            return failedMessage(res, "User or Deposit not found!");
         }
 
         successMessage(res, deleteDeposit);

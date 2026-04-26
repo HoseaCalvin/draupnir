@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react"
 
-import { useAuth } from "@/contexts/AuthContext"
+import { useAuth } from "@/providers/AuthProvider"
 
 import { Transaction, TransactionCategory } from "@/hooks/useTransaction"
 
@@ -48,7 +48,7 @@ function CurrentBalancePopup({ setIsPopupOpen, setCurrentBalance, setTransaction
                 current_balance: balance
             });
 
-            if(responseUpdate.status === 200) {
+            if(responseUpdate.status === 201) {
                 const insertResponse = await api.post(`/api/transactionLog/insert`, 
                     {
                         user_id: user?.id, 
@@ -61,16 +61,10 @@ function CurrentBalancePopup({ setIsPopupOpen, setCurrentBalance, setTransaction
 
                 setTransactions(prev => [...prev, ...insertResponse.data.data]);
                 setCurrentBalance(prev => prev + balance);
-                setIsPopupOpen(false);
-            }
-
-            if(balance >= 1000000) {
-                await api.patch(`/api/draupnir/increment/${user?.id}`, {
-                    balance: balance
-                });
             }
 
             setBalance(0);
+            setIsPopupOpen(false);
 
             toast.success(`Successfully added ${useRupiahFormat(balance)} into balance!`);
         } catch (error) {

@@ -14,7 +14,7 @@ export const getCategories = async (req: Request, res: Response) => {
         `
 
         if(getCategories.length === 0) {
-            return failedMessage(res, "No data is available in 'transaction_category'!");
+            return failedMessage(res, "No data is available in Category table!");
         }
 
         successMessage(res, getCategories);

@@ -12,7 +12,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/providers/AuthProvider";
 
 import InfoCard from "@/components/InfoCard";
 import MonthlyIncomePopup from "@/components/MonthlyIncomePopup";
@@ -139,8 +139,8 @@ function Profile() {
                                     Log Out
                                 </Link>
                                 <Link
-                                    href={"/edit"}
-                                    className="cursor-no-drop flex items-center hover:bg-[#9F7D38] text-white text-xs font-semibold w-full gap-x-2 md:text-sm lg:text-base lg:rounded-lg lg:p-1"
+                                    href={"/private/profile/edit"}
+                                    className=" flex items-center hover:bg-[#9F7D38] text-white text-xs cursor-pointer font-semibold w-full gap-x-2 md:text-sm lg:text-base lg:rounded-lg lg:p-1"
                                     aria-disabled
                                 >
                                     <Image
@@ -153,8 +153,8 @@ function Profile() {
                                     Edit Profile
                                 </Link>
                                 <Link
-                                    href={"/delete"}
-                                    className="cursor-no-drop flex items-center hover:bg-[#9F7D38] text-white text-xs font-semibold w-full gap-x-2 md:text-sm lg:text-base lg:rounded-lg lg:p-1"
+                                    href={"/private/profile/delete"}
+                                    className="flex items-center hover:bg-[#9F7D38] text-white text-xs font-semibold w-full gap-x-2 md:text-sm lg:text-base lg:rounded-lg lg:p-1"
                                 >
                                     <Image
                                         src={DeleteProfile}
@@ -171,7 +171,7 @@ function Profile() {
                 </div>
                 <div className="bg-[#FFFDF0] relative col-span-1 row-start-2 row-span-2 rounded-2xl shadow-lg h-[23rem] lg:h-[26rem]">
                     <div className="mx-5 flex flex-col h-full">
-                        <div className="py-4 flex">
+                        <div className="pt-3 pb-2 flex lg:py-4">
                             <h1 className="title-card">Monthly Income</h1>
                             <InfoCard 
                                 text="Every income item is added to your balance every 28th day of a month."
@@ -231,7 +231,7 @@ function Profile() {
                 </div>
                 <div className="bg-[#FFFDF0] relative col-span-1 row-start-2 row-span-2 rounded-2xl shadow-lg h-[23rem] lg:h-[26rem]">
                     <div className="mx-5 flex flex-col h-full">
-                        <div className="py-4 flex">
+                        <div className="pt-3 pb-2 flex lg:py-4">
                             <h1 className="title-card">Monthly Expense</h1>
                             <InfoCard 
                                 text="Every expense item is added to your expense every 1st day of a month."

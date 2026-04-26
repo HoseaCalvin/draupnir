@@ -1,13 +1,13 @@
 import express, { Router } from "express";
-import { login, register, updateUser, deleteUser, verifyUser } from "../controllers/userController";
-import { authenticationToken } from "../middleware/auth.middleware";
+import { register, updateUserBiodata, deleteUser, verifyUser, updateUserEmail, updateUserPassword } from "../controllers/userController";
 
 const userRouter: Router = express.Router();
 
-userRouter.post("/login", login);
 userRouter.post("/verify", verifyUser);
 userRouter.post("/register", register);
-userRouter.patch("/update/:id", updateUser);
+userRouter.patch("/update/biodata/:id", updateUserBiodata);
+userRouter.patch("/update/email/:id", updateUserEmail);
+userRouter.patch("/update/password/:id", updateUserPassword);
 userRouter.delete("/delete/:id", deleteUser);
 
 export default userRouter;

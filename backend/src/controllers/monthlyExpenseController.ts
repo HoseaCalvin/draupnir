@@ -10,6 +10,10 @@ export const insertMonthlyExpense = async (req: Request, res: Response) => {
         return failedMessage(res, "All fields are required!");
     }
 
+    if(amount <= 0) {
+        return failedMessage(res, "Amount must have a value more than zero!");
+    }
+
     try {
         const insertExpense = await sql`
             INSERT INTO expense_list (user_id, name, amount)
@@ -18,8 +22,8 @@ export const insertMonthlyExpense = async (req: Request, res: Response) => {
                 *
         `
 
-        if(!insertExpense) {
-            return failedMessage(res, "One of the fields is missing!");
+        if(insertExpense.length === 0) {
+            return failedMessage(res, "Failed to insert an Expense Item!");
         }
 
         successMessage(res, insertExpense[0]);
@@ -30,7 +34,7 @@ export const insertMonthlyExpense = async (req: Request, res: Response) => {
 
 export const reduceBalance = async (user_id: string) => {
     if(!user_id) {
-        console.log("user_id is missing!");
+        console.log("User ID is missing!");
     }
 
     try {
@@ -83,7 +87,7 @@ export const deleteMonthlyExpense = async (req: Request, res: Response) => {
     const { id, user_id } = req.body;
 
     if(!id || !user_id) {
-        return failedMessage(res, "id or user_id is missing!");
+        return failedMessage(res, "All fields are required!");
     }
 
     try {
@@ -93,10 +97,12 @@ export const deleteMonthlyExpense = async (req: Request, res: Response) => {
             WHERE
                 id = ${id} 
                 AND user_id = ${user_id}
+            RETURNING
+                *
         `
 
-        if(!deleteExpense) {
-            return notFoundMesage(res, "user_id not found!");
+        if(deleteExpense.length === 0) {
+            return notFoundMesage(res, "User or Expense Item not found!");
         }
 
         successMessage(res, deleteExpense);

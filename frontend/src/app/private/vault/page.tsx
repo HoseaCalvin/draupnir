@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-import { useFinance } from "@/contexts/FinanceContext";
+import { useFinance } from "@/providers/FinanceProvider";
 
 import InfoCard from "@/components/InfoCard";
 import ExpensePopup from "@/components/ExpensePopup";
@@ -66,7 +66,7 @@ function TheVault() {
             <main className="frame-padding flex flex-col gap-y-5 lg:grid lg:grid-cols-2 lg:grid-rows-3 lg:gap-8">
                 <section className="bg-[#FFFDF0] col-span-1 row-start-1 rounded-2xl shadow-lg lg:h-[16rem]">
                     <div className="mx-5 flex flex-col h-full">
-                        <div className="py-4">
+                        <div className="pt-3 pb-2 lg:py-4">
                             <h1 className="title-card">Balance</h1>
                         </div>
                         <hr/>
@@ -78,7 +78,7 @@ function TheVault() {
                 </section>
                 <section className="bg-[#FFFDF0] col-span-1 row-start-2 rounded-2xl shadow-lg lg:h-[16rem]">
                     <div className="mx-5 flex flex-col h-full">
-                        <div className="py-4 flex">
+                        <div className="pt-3 pb-2 flex lg:py-4">
                             <h1 className="title-card">Deposit</h1>
                             <InfoCard 
                                 text="Deposit helps you track how much you've saved in real-life deposits."
@@ -96,7 +96,7 @@ function TheVault() {
                 </section>
                 <section className="bg-[#FFFDF0] col-span-1 row-start-3 rounded-2xl shadow-lg lg:h-[16rem]">
                     <div className="mx-5 flex flex-col h-full">
-                        <div className="py-4">
+                        <div className="pt-3 pb-2 lg:py-4">
                             <h1 className="title-card">This Month's Expense</h1>
                         </div>
                         <hr/>
@@ -108,7 +108,7 @@ function TheVault() {
                 </section>
                 <section className="bg-[#FFFDF0] row-span-2 h-full rounded-2xl shadow-lg">
                     <div className="mx-5">
-                        <div className="py-4 flex">
+                        <div className="pt-3 pb-2 flex lg:py-4">
                             <h1 className="title-card">Cashflow</h1>
                             <InfoCard 
                                 text="Cashflow displays detailed distribution of your financial activities in the current month."
@@ -146,7 +146,7 @@ function TheVault() {
                 </section>
                 <section className="bg-[#FFFDF0] col-span-1 h-full rounded-2xl shadow-lg">
                     <div className="mx-5">
-                        <div className="py-4 flex">
+                        <div className="pt-3 pb-2 flex lg:py-4">
                             <h1 className="text-xl title-card">Monthly Transaction Log</h1>
                         </div>
                         <hr/>

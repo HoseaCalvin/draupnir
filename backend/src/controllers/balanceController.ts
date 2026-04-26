@@ -18,10 +18,6 @@ export const getBalance = async (req: Request, res: Response) => {
                 user_id
         `
 
-        if(getBalance.length === 0) {
-            return notFoundMesage(res, "Balance not found!");
-        }
-
         successMessage(res, getBalance[0]);
     } catch (error) {
         serverErrorMessage(res);        
@@ -32,8 +28,8 @@ export const reduceBalance = async (req: Request, res: Response) => {
     const { user_id } = req.params;
     const { expense } = req.body;
 
-    if(!expense) {
-        return failedMessage(res, "Balance is missing!");
+    if(!expense || expense <= 0) {
+        return failedMessage(res, "Expense must have a value more than zero!");
     }
 
     try {
@@ -48,6 +44,10 @@ export const reduceBalance = async (req: Request, res: Response) => {
                 *
         `
 
+        if(reduceBalance.length === 0) {
+            return failedMessage(res, "User not found!");
+        }
+
         successMessage(res, reduceBalance);
     } catch (error) {
         serverErrorMessage(res);
@@ -58,6 +58,10 @@ export const updateBalance = async (req: Request, res: Response) => {
     const { user_id } = req.params;
     const { current_balance } = req.body;
 
+    if(!current_balance || current_balance <= 0) {
+        return failedMessage(res, "Current Balance must have a value more than zero!");
+    }
+    
     try {
         const updateBalance = await sql`
             UPDATE 
@@ -69,6 +73,10 @@ export const updateBalance = async (req: Request, res: Response) => {
             RETURNING
                 *
         `
+
+        if(updateBalance.length === 0) {
+            return failedMessage(res, "User not found!");
+        }
 
         successMessage(res, updateBalance);
     } catch (error) {

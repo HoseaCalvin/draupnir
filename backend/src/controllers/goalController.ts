@@ -6,20 +6,29 @@ import { failedMessage, notFoundMesage, serverErrorMessage, successMessage } fro
 export const insertGoal = async (req: Request, res: Response) => {
     const { user_id, name, target_balance, deadline } = req.body;
 
-    if(!user_id || !deadline || !name || target_balance <= 0) {
+    if(!user_id || !deadline || !name || !target_balance) {
         return failedMessage(res, "All fields are required!");
+    }
+
+    if(target_balance <= 0) {
+        return failedMessage(res, "Target Balance must have a value more than zero!");
     }
 
     try {
         const insertGoal = await sql`
             INSERT INTO goal (user_id, name, target_balance, deadline)
                 VALUES (${user_id}, ${name}, ${target_balance}, ${deadline})
+            RETURNING
+                *
         `
+
+        if(insertGoal.length === 0) {
+            return failedMessage(res, "Failed to insert a goal!");
+        }
 
         successMessage(res, insertGoal);
     } catch (error) {
-        serverErrorMessage(res);
-        console.error(error);        
+        serverErrorMessage(res);    
     }
 }
 
@@ -66,8 +75,12 @@ export const getGoalByUserId = async (req: Request, res: Response) => {
 export const updateGoal = async (req: Request, res: Response) => {
     const { id, user_id, name, target_balance, deadline } = req.body;
 
-    if(!id || !user_id || target_balance <= 0 || !deadline) {
+    if(!id || !user_id || !target_balance || !deadline) {
         return failedMessage(res, "All fields are required");
+    }
+
+    if(target_balance <= 0) {
+        return failedMessage(res, "Target Balance must have a value more than zero!");
     }
 
     try {
@@ -80,10 +93,12 @@ export const updateGoal = async (req: Request, res: Response) => {
             WHERE
                id = ${id} AND
                user_id = ${user_id}
+            RETURNING
+                *
         `
 
-        if(!updateGoal) {
-            return notFoundMesage(res, "Goal not found!");
+        if(updateGoal.length === 0) {
+            return notFoundMesage(res, "User or Goal not found!");
         }
 
         successMessage(res, updateGoal);
@@ -105,7 +120,7 @@ export const deleteGoal = async (req: Request, res: Response) => {
         `
 
         if(deleteGoal.length === 0) {
-            return notFoundMesage(res, "Goal not found!");
+            return notFoundMesage(res, "User or Goal not found!");
         }
 
         successMessage(res, deleteGoal);

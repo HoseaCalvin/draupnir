@@ -16,10 +16,6 @@ export const getExpense = async (req: Request, res: Response) => {
                 user_id = ${user_id}
         `
 
-        if(getExpense.length === 0) {
-            return failedMessage(res, "Expense not found!");
-        }
-
         successMessage(res, getExpense[0]);
     } catch (error) {
         serverErrorMessage(res);
@@ -30,8 +26,12 @@ export const updateExpense = async (req: Request, res: Response) => {
     const { user_id } = req.params;
     const { expense } = req.body;
 
-    if(!expense) {
-        return failedMessage(res, "Expense must have minimum values!");
+    if(!user_id) {
+        return failedMessage(res, "User ID is missing!");
+    }
+
+    if(!expense || expense <= 0) {
+        return failedMessage(res, "Expense must have a value more than zero!");
     }
 
     try {
@@ -45,6 +45,10 @@ export const updateExpense = async (req: Request, res: Response) => {
                 *
         `
 
+        if(addExpense.length === 0) {
+            return failedMessage(res, "User not found!");
+        }
+
         successMessage(res, addExpense);
     } catch (error) {
         serverErrorMessage(res);
@@ -55,7 +59,7 @@ export const deleteExpense = async (req: Request, res: Response) => {
     const { user_id } = req.params;
 
     if(!user_id) {
-        return failedMessage(res, "user_id is missing!");
+        return failedMessage(res, "User ID is missing!");
     }
     
     try {
@@ -70,7 +74,7 @@ export const deleteExpense = async (req: Request, res: Response) => {
         `
 
         if(deleteExpense.length === 0) {
-            return notFoundMesage(res, deleteExpense[0]);
+            return notFoundMesage(res, "User not found!");
         }
 
         successMessage(res, deleteExpense);
