@@ -55,7 +55,7 @@ npm run dev
 ### 5. Run Redis
 
 ```bash
-docker compose redis
+docker compose up redis
 ```
 
 ### 6. Run Cron Jobs
@@ -86,6 +86,5 @@ docker compose up
 ## 🤝 Future plans
 
 - Develop chatbot for seamless interaction with Mimir (AI).
-- Develop Profile page, such as "Edit Profile" and "Delete Profile".
 - Improve Mimir (AI) by adding feature engineering, feature store, and guardrails.
 - Implement skeleton cards to enhance UI/UX.
