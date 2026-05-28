@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from 'react';
+
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
 import { useAuth } from "../../providers/AuthProvider";
@@ -40,7 +42,13 @@ function Login() {
                 <form onSubmit={handleSubmit} className="bg-white w-full h-full shadow-lg rounded-2xl max-w-md max-h-[70vh] md:max-h-[75vh] lg:max-h-[80vh]">
                     <div className="flex justify-center p-4">
                         <div>
-                            <img src="/draupnir-with-text-logo.png" alt="Draupnir" className="w-[5.5rem] h-auto xl:w-[7rem]"/>
+                            <Image 
+                                src="/draupnir-with-text-logo.png" 
+                                alt="Draupnir" 
+                                className="w-[5.5rem] h-auto xl:w-[7rem]"
+                                width={100}
+                                height={100}
+                            />
                             <p className="text-center font-extrabold text-xs md:text-sm">Login</p>                     
                         </div>
                     </div>

@@ -10,10 +10,6 @@ export const insertTransactionLog = async (req: Request, res: Response) => {
         return failedMessage(res, "All fields are required!");
     }
 
-    if(amount <= 0) {
-        return failedMessage(res, "Amount must have a value more than zero!");
-    }
-
     try {
         const insertLog = await sql`
             INSERT INTO transaction_log (user_id, recorded_date, transaction_name, amount, category_id)
@@ -90,7 +86,15 @@ export const getAllTransactionLog = async (req: Request, res: Response) => {
                     WHEN 'DEPOSIT_INSERT' THEN 'Insert (' || category || ')'
                     ELSE category
                 END AS category, 
-                amount
+                amount,
+                (
+                    SELECT
+                        SUM(amount)
+                    FROM
+                        transaction_log
+                    WHERE
+                        user_id = ${user_id}
+                ) AS total_amount
             FROM 
                 transaction_log tl
                 LEFT JOIN transaction_category tc ON tl.category_id = tc.id

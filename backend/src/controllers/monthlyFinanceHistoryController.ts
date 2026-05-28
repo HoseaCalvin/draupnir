@@ -35,7 +35,7 @@ export const insertHistory = async (user_id: string) => {
         }
 
     } catch (error) {
-        console.error("There was an error while generating your financial report!");
+        console.error("There was an error while inserting your financial report!", error);
     }
 }
 

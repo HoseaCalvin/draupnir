@@ -78,6 +78,18 @@ function TheVault() {
                 </section>
                 <section className="bg-[#FFFDF0] col-span-1 row-start-2 rounded-2xl shadow-lg lg:h-[16rem]">
                     <div className="mx-5 flex flex-col h-full">
+                        <div className="pt-3 pb-2 lg:py-4">
+                            <h1 className="title-card">This Month's Expense</h1>
+                        </div>
+                        <hr/>
+                        <div className="flex flex-col justify-center items-center h-full mb-4 lg:mb-0 lg:space-y-3">
+                            <h2 className="p-4 text-xl text-center font-bold lg:text-4xl">{useRupiahFormat(expense)}</h2>
+                            <button onClick={() => setExpensePopup(true)} className="font-bold text-white text-xs bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg px-10 py-2 cursor-pointer lg:text-base">Add</button>
+                        </div>                        
+                    </div>
+                </section>
+                <section className="bg-[#FFFDF0] col-span-1 row-start-3 rounded-2xl shadow-lg lg:h-[16rem]">
+                    <div className="mx-5 flex flex-col h-full">
                         <div className="pt-3 pb-2 flex lg:py-4">
                             <h1 className="title-card">Deposit</h1>
                             <InfoCard 
@@ -92,18 +104,6 @@ function TheVault() {
                                 <button onClick={routeToDepositList} className="font-bold text-white text-xs bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg px-10 py-2 cursor-pointer lg:text-base">List</button>
                             </div>
                         </div>
-                    </div>
-                </section>
-                <section className="bg-[#FFFDF0] col-span-1 row-start-3 rounded-2xl shadow-lg lg:h-[16rem]">
-                    <div className="mx-5 flex flex-col h-full">
-                        <div className="pt-3 pb-2 lg:py-4">
-                            <h1 className="title-card">This Month's Expense</h1>
-                        </div>
-                        <hr/>
-                        <div className="flex flex-col justify-center items-center h-full mb-4 lg:mb-0 lg:space-y-3">
-                            <h2 className="p-4 text-xl text-center font-bold lg:text-4xl">{useRupiahFormat(expense)}</h2>
-                            <button onClick={() => setExpensePopup(true)} className="font-bold text-white text-xs bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg px-10 py-2 cursor-pointer lg:text-base">Add</button>
-                        </div>                        
                     </div>
                 </section>
                 <section className="bg-[#FFFDF0] row-span-2 h-full rounded-2xl shadow-lg">
@@ -166,9 +166,13 @@ function TheVault() {
                                             <td>{new Date(transaction.recorded_date).toLocaleDateString()}</td>
                                             <td>{new Date(transaction.recorded_date).toLocaleTimeString()}</td>
                                             <td>{transaction.transaction_name}</td>
-                                            <td>{useRupiahFormat(transaction.amount)}</td>
+                                            <td className={`${transaction.transaction_name === 'Expense' ? 'text-red-600' : 'text-green-600'}`}>{useRupiahFormat(transaction.amount)}</td>
                                         </tr>
                                     ))}
+                                    <tr className="*:text-xs *:pt-3 sm:*:text-base">
+                                        <td colSpan={3} className="font-semibold text-center border-t border-black">Total Amount</td>
+                                        <td className="font-semibold text-center border-t border-black">{useRupiahFormat(transactions.reduce((acc, transaction) => acc + transaction.amount, 0))}</td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>

@@ -55,7 +55,7 @@ function ExpensePopup({ setIsPopupOpen, setExpense, setCurrentBalance, setTransa
                         user_id: user?.id, 
                         recorded_date: new Date(), 
                         transaction_name: 'Expense', 
-                        amount: balance, 
+                        amount: -balance, 
                         category_id: categoryId
                     }
                 );

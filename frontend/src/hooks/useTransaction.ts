@@ -9,6 +9,7 @@ export interface Transaction {
     recorded_date: string;
     category: string;
     amount: number;
+    total_amount: number;
 }
 
 export type TransactionCategory = {

@@ -1,5 +1,5 @@
 import express, { Router } from "express";
-import { getHistory } from "../controllers/monthlyFinanceHistoryController";
+import { getHistory, insertHistory } from "../controllers/monthlyFinanceHistoryController";
 
 const monthlyFinanceHistoryRouter: Router = express.Router();
 

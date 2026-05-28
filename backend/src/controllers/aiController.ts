@@ -32,7 +32,7 @@ export const generateAnalysis = async (req: Request, res: Response) => {
         const pastFinancial = await sql`
             SELECT
                 balance_history,
-                emergency_fund_history,
+                deposit_history,
                 expense_history
             FROM
                 monthly_finance_history
@@ -163,9 +163,8 @@ export const getSummary = async (req: Request, res: Response) => {
             FROM
                 monthly_ai_report
             WHERE
-                user_id = ${user_id} AND
-                recorded_date >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month'
-                AND recorded_date < DATE_TRUNC('month', CURRENT_DATE)
+                user_id = ${user_id} 
+                AND EXTRACT(MONTH FROM recorded_date) = EXTRACT(MONTH FROM CURRENT_DATE)
             `
         
         successMessage(res, fetchSummary);
@@ -188,9 +187,8 @@ export const getAnalysis = async (req: Request, res: Response) => {
             FROM
                 monthly_ai_report
             WHERE
-                user_id = ${user_id} AND
-                recorded_date >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month'
-                AND recorded_date < DATE_TRUNC('month', CURRENT_DATE) 
+                user_id = ${user_id} 
+                AND EXTRACT(MONTH FROM recorded_date) = EXTRACT(MONTH FROM CURRENT_DATE)
         `
 
         successMessage(res, fetchContent);

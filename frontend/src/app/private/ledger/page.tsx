@@ -43,17 +43,19 @@ function Ledger() {
                             </tr>
                         </thead>
                         <tbody>
-                            {
-                                transactions.map((transaction, index) => (
+                            { transactions.map((transaction, index) => (
                                     <tr key={index} className="*:text-sm *:text-center *:py-1 lg:*:text-base">
                                         <td>{new Date(transaction.recorded_date).toLocaleDateString()}</td>
                                         <td>{new Date(transaction.recorded_date).toLocaleTimeString()}</td>
                                         <td>{transaction.transaction_name}</td>
                                         <td>{transaction.category}</td>
-                                        <td>{useRupiahFormat(transaction.amount)}</td>
+                                        <td className={`${transaction.transaction_name === 'Expense' ? 'text-red-600' : 'text-green-600'}`}>{useRupiahFormat(transaction.amount)}</td>
                                     </tr>
-                                ))
-                            }
+                                ))}
+                                <tr className="*:text-xs *:pt-3 sm:*:text-base">
+                                    <td colSpan={4} className="font-semibold text-center border-t border-black">Total Amount</td>
+                                    <td className="font-semibold text-center border-t border-black">{useRupiahFormat(transactions.reduce((acc, transaction) => acc + transaction.amount, 0))}</td>
+                                </tr>
                         </tbody>
                     </table>
                 </div>

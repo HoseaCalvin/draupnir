@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 import { api } from "@/lib/api";
 
@@ -48,7 +49,13 @@ function Register() {
                 <form onSubmit={handleRegister} className="bg-white w-md shadow-lg rounded-2xl h-full max-h-[90vh] md:max-h-[95vh]">
                     <div className="flex justify-center p-2">
                         <div>
-                            <img src="/draupnir-with-text-logo.png" alt="Draupnir" className="w-[5.5rem] h-auto xl:w-[6rem]"/>                        
+                            <Image 
+                                src="/draupnir-with-text-logo.png" 
+                                alt="Draupnir" 
+                                className="w-[5.5rem] h-auto xl:w-[6rem]"
+                                width={100}
+                                height={100}
+                            />                        
                             <p className="text-center font-extrabold text-xs md:text-sm">Register</p>
                         </div>
                     </div>
