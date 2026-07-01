@@ -4,7 +4,7 @@ import { insertTransactionLog, getTransactionLog, getAllTransactionLog } from ".
 const transactionLogRouter: Router = express.Router();
 
 transactionLogRouter.post("/insert", insertTransactionLog);
-transactionLogRouter.get("/get/all/:user_id", getAllTransactionLog);
+transactionLogRouter.get("/all/get/:user_id", getAllTransactionLog);
 transactionLogRouter.get("/get/:user_id", getTransactionLog);
 
 export default transactionLogRouter;

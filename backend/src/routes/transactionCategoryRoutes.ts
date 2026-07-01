@@ -3,6 +3,6 @@ import { getCategories } from "../controllers/transactionCategoryController";
 
 const transactionCategoryRouter: Router = express.Router();
 
-transactionCategoryRouter.get('/get', getCategories);
+transactionCategoryRouter.get("/get", getCategories);
 
 export default transactionCategoryRouter;

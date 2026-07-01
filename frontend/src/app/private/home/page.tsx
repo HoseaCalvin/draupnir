@@ -62,7 +62,7 @@ function Home() {
             }
 
             try {
-                const fetch = await api.get(`/api/ai/get/summary/${user?.id}`)
+                const fetch = await api.get(`/api/ai/summary/get/${user?.id}`)
 
                 setAiSummary(fetch.data.data[0]);
             } catch (error) {
@@ -71,11 +71,11 @@ function Home() {
         }
 
         fetchAiSummary();
-    }, [aiSummary, user]);
+    }, [user]);
 
     const generateAnalysis = async () => {
         try {
-            await api.post('/api/ai/generate', {
+            await api.post('/api/ai/analysis/generate', {
                 user_id: user?.id
             });
         } catch (error) {
@@ -131,12 +131,6 @@ function Home() {
                                 title="This Month's Expense"
                                 icon={<ExpenseIcon/>}
                                 value={expense}
-                            />
-                            <StashCard
-                                border="#6BBF59" 
-                                title="Cashflow"
-                                icon={<CashflowIcon/>}
-                                value={currentBalance - expense}
                             />
                         </div>
                     </div>

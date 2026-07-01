@@ -3,8 +3,8 @@ import { generateAnalysis, getAnalysis, getSummary } from "../controllers/aiCont
 
 const aiRouter = express.Router();
 
-aiRouter.post("/generate", generateAnalysis);
-aiRouter.get("/get/detailed/:user_id", getAnalysis);
-aiRouter.get("/get/summary/:user_id", getSummary);
+aiRouter.post("/analysis/generate", generateAnalysis);
+aiRouter.get("/analysis/get/:user_id", getAnalysis);
+aiRouter.get("/summary/get/:user_id", getSummary);
 
 export default aiRouter;

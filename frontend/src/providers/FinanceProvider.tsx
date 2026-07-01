@@ -8,20 +8,16 @@ import { api } from "@/lib/api";
 type FinanceContextType = {
     currentBalance: number;
     expense: number;
-    deposit: number;
     setCurrentBalance: React.Dispatch<React.SetStateAction<number>>;
     setExpense: React.Dispatch<React.SetStateAction<number>>;
-    setDeposit: React.Dispatch<React.SetStateAction<number>>;
     loading: boolean;
 }
 
 const FinanceContext = createContext<FinanceContextType>({
     currentBalance: 0,
     expense: 0,
-    deposit: 0,
     setCurrentBalance: () => {},
     setExpense: () => {},
-    setDeposit: () => {},
     loading: true,
 });
 
@@ -29,7 +25,6 @@ function FinanceProvider({ children }: { children: React.ReactNode }) {
     const { user, isAuthenticated, authLoading } = useAuth();
     const [currentBalance, setCurrentBalance] = useState<number>(0);
     const [expense, setExpense] = useState<number>(0);
-    const [deposit, setDeposit] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
@@ -46,7 +41,6 @@ function FinanceProvider({ children }: { children: React.ReactNode }) {
                 const financeResponse = await api.get(`/api/finance/get/${user?.id}`);
 
                 setCurrentBalance(financeResponse.data.data[0].balance);
-                setDeposit(financeResponse.data.data[0].deposit);
                 setExpense(financeResponse.data.data[0].expense);
             } catch (error) {
                 console.error("Error in fetching financial data!", error);
@@ -65,7 +59,7 @@ function FinanceProvider({ children }: { children: React.ReactNode }) {
             }
             
             try {
-                const financeDate = await api.get(`/api/finance/get/date/${user?.id}`);
+                const financeDate = await api.get(`/api/finance/date/get/${user?.id}`);
 
                 if(new Date(financeDate.data.data[0].recorded_date).getMonth() !== new Date(Date.now()).getMonth()) {
                     await api.patch(`/api/finance/update/${user?.id}`);
@@ -80,7 +74,7 @@ function FinanceProvider({ children }: { children: React.ReactNode }) {
     }, [user, isAuthenticated, authLoading]);
 
     return(
-        <FinanceContext.Provider value={{ currentBalance, expense, deposit, setCurrentBalance, setExpense, setDeposit, loading }}>
+        <FinanceContext.Provider value={{ currentBalance, expense, setCurrentBalance, setExpense, loading }}>
             { children }
         </FinanceContext.Provider>
     )

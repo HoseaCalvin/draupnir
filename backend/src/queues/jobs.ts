@@ -8,7 +8,7 @@ export const recordMonthlyFinancialReport = async () => {
     const users = await getAllUsers();
 
     for(const user of users) {
-        if(await isAlreadyProcessed(user.id, 'financial_report') === false) {
+        if(await isAlreadyProcessed(user.id, 'financial_report') === true) {
             return;
         }
 
@@ -34,7 +34,7 @@ export const runMonthlyIncome = async () => {
     const users = await getAllUsers();
 
     for(const user of users) {
-        if(await isAlreadyProcessed(user.id, 'monthly_income') === false) {
+        if(await isAlreadyProcessed(user.id, 'monthly_income') === true) {
             return;
         }
 
@@ -60,9 +60,6 @@ export const runMonthlyExpense = async () => {
     const users = await getAllUsers();
 
     for(const user of users) {
-        if(await isAlreadyProcessed(user.id, 'monthly_expense') === false) {
-            return;
-        }
 
         await resetExpense();
         await reduceBalance(user.id);

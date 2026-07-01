@@ -14,9 +14,9 @@ function FinancialAnalysis({ isPopupOpen, setIsPopupOpen }: FinancialAnalysis) {
     const [aiResponse, setAiResponse] = useState<string>();
 
     useEffect(() => {
-        const fetchDetailedText = async () => {
+        const fetchAnalysis = async () => {
             try {
-                const fetch = await api.get(`/api/ai/get/detailed/${user?.id}`)
+                const fetch = await api.get(`/api/ai/analysis/get/${user?.id}`)
             
                 setAiResponse(fetch.data.data[0].ai_detailed_text);
             } catch (error) {
@@ -24,7 +24,7 @@ function FinancialAnalysis({ isPopupOpen, setIsPopupOpen }: FinancialAnalysis) {
             }
         }
 
-        fetchDetailedText();
+        fetchAnalysis();
     }, [aiResponse]);
 
     return(

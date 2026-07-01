@@ -13,9 +13,9 @@ export const getDepositByUserId = async (req: Request, res: Response) => {
     try {
         const getDepositByUserId = await sql`
             SELECT
-                *
+                SUM(amount)::INTEGER AS deposit
             FROM
-                finance
+                deposit_list
             WHERE
                 user_id = ${user_id}
         `

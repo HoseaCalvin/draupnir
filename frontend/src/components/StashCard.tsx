@@ -10,7 +10,7 @@ interface StashCard {
 
 function StashCard({ border, title, icon, value }: StashCard) {
     return(
-        <div className="bg-white rounded-xl min-w-[10rem] min-h-[8rem] shadow-lg mx-2.5 relative border md:w-[20rem] md:h-full" style={{ borderColor: border }}>
+        <div className="bg-white rounded-xl min-w-[10rem] min-h-[8rem] w-full shadow-lg mx-2.5 relative border md:h-full" style={{ borderColor: border }}>
             <div className="flex flex-col justify-between h-full">
                 <div className="p-3 top-0.5">
                     {icon}

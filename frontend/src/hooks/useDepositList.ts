@@ -15,7 +15,7 @@ export type DepositCard = {
     deadline: Date;
 }
 
-function useDeposit() {
+function useDepositList() {
     const { user, authLoading } = useAuth();
 
     const [depositList, setDepositList] = useState<DepositCard[]>([]);
@@ -28,7 +28,7 @@ function useDeposit() {
             }
 
             try {
-                const fetch = await api.get(`/api/deposit/get/list/${user?.id}`);
+                const fetch = await api.get(`/api/deposit/list/get/${user?.id}`);
     
                 setDepositList(fetch.data.data ?? []);
             } catch (error) {
@@ -45,4 +45,4 @@ function useDeposit() {
     return { depositList, setDepositList, loading };
 }
 
-export default useDeposit;
+export default useDepositList;

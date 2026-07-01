@@ -60,7 +60,7 @@ function ExpensePopup({ setIsPopupOpen, setExpense, setCurrentBalance, setTransa
                     }
                 );
 
-                await api.patch(`/api/currentBalance/update/reduce/${user?.id}`, {
+                await api.patch(`/api/currentBalance/reduce/${user?.id}`, {
                     expense: balance
                 });
 

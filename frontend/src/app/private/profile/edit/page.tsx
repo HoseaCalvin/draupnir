@@ -62,7 +62,7 @@ function EditProfile() {
         e.preventDefault();
 
         try {
-            const response = await api.patch(`/api/users/update/biodata/${user?.id}`, {
+            const response = await api.patch(`/api/users/biodata/update/${user?.id}`, {
                 username: editUsername,
                 dob: editBirthdate,
                 gender: editGender
@@ -98,7 +98,7 @@ function EditProfile() {
         }
 
         try {
-            const response = await api.patch(`/api/users/update/email/${user?.id}`, {
+            const response = await api.patch(`/api/users/email/update/${user?.id}`, {
                 email: editEmail
             });
 
@@ -137,7 +137,7 @@ function EditProfile() {
         }
 
         try {
-            const response = await api.patch(`/api/users/update/password/${user?.id}`, {
+            const response = await api.patch(`/api/users/password/update/${user?.id}`, {
                 password: editPassword,
                 confirmPassword: retypePassword
             });

@@ -1,14 +1,9 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI, Content } from '@google/genai';
 import { Request, Response } from "express";
 import { failedMessage, serverErrorMessage, successMessage } from "../misc/messages";
 import { sql } from "../configs/database";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-
-const model = genAI.getGenerativeModel({ 
-    model: 'gemini-2.5-flash',
-    generationConfig: { responseMimeType: "application/json" }
-})
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 export const generateAnalysis = async (req: Request, res: Response) => {
     const { user_id } = req.body;
@@ -18,7 +13,7 @@ export const generateAnalysis = async (req: Request, res: Response) => {
     }
 
     try {
-        const currentFinancial = await sql`
+        const currentFinance = await sql`
             SELECT
                 balance,
                 deposit,
@@ -27,6 +22,23 @@ export const generateAnalysis = async (req: Request, res: Response) => {
                 finance
             WHERE
                 user_id = ${user_id};
+        `
+
+        const currentLargestExpense = await sql`
+            SELECT
+                amount,
+                category
+            FROM
+                transaction_log tl
+                JOIN transaction_category tc ON tl.category_id = tc.id
+            WHERE
+                user_id = ${user_id} 
+                AND transaction_name = 'Expense'
+                AND recorded_date >= date_trunc('month', CURRENT_DATE)
+                AND recorded_date < date_trunc('month', CURRENT_DATE) + INTERVAL '1 month'
+            ORDER BY
+                amount DESC
+            LIMIT 1;
         `
 
         const pastFinancial = await sql`
@@ -40,22 +52,6 @@ export const generateAnalysis = async (req: Request, res: Response) => {
                 user_id = ${user_id}
                 AND recorded_date >= date_trunc('month', CURRENT_DATE) - INTERVAL '1 month'
                 AND recorded_date < date_trunc('month', CURRENT_DATE);
-        `
-
-        const currentLargestExpense = await sql`
-            SELECT
-                amount,
-                category
-            FROM
-                transaction_log tl
-                JOIN transaction_category tc ON tl.category_id = tc.id
-            WHERE
-                user_id = ${user_id} 
-                AND transaction_name = 'Expense'
-                AND recorded_date = CURRENT_DATE
-            ORDER BY
-                amount DESC
-            LIMIT 1;
         `
 
         const pastLargestExpense = await sql`
@@ -75,62 +71,53 @@ export const generateAnalysis = async (req: Request, res: Response) => {
             LIMIT 1;
         `
 
-        const aiData = {
-            balance: Number(currentFinancial[0].balance),
-            deposit: Number(currentFinancial[0].deposit),
-            expense: Number(currentFinancial[0].expense),
-            net: Number(currentFinancial[0].balance - currentFinancial[0].expense),
+        const currentFinancialJSON = currentFinance.map((record: any) => ({
+            balance: Number(record.balance) ?? 0,
+            deposit: Number(record.deposit) ?? 0,
+            expense: Number(record.expense) ?? 0,
             largest_expense: {
-                amount: Number(currentLargestExpense[0]?.amount),
+                amount: Number(currentLargestExpense[0]?.amount) ?? 0,
                 category: currentLargestExpense[0]?.category ?? 'None'
-            },
+            }
+        }));
 
-            balance_history: Number(pastFinancial[0].balance_history),
-            deposit_history: Number(pastFinancial[0].deposit_history),
-            expense_history: Number(pastFinancial[0].expense_history),
-            past_net: Number(pastFinancial[0].balance_history - pastFinancial[0].expense_history),
-            past_largest_expense: {
-                amount: Number(pastLargestExpense[0]?.amount),
+        const lastMonthFinacialJSON = pastFinancial.map((record: any) => ({
+            balance: Number(record.balance_history) ?? 0,
+            deposit: Number(record.deposit_history) ?? 0,
+            expense: Number(record.expense_history) ?? 0,
+            largest_expense: {
+                amount: Number(pastLargestExpense[0]?.amount) ?? 0,
                 category: pastLargestExpense[0]?.category ?? 'None'
             }
-        }
+        }));
+        
+        const result = await ai.models.generateContent({
+            model: 'gemini-2.5-flash', // Explicitly pass the model name here
+            contents: `
+                You are a senior financial analyst.
 
-        const result = await model.generateContent(`
-            You are a financial analyst.
+                Write a concise monthly financial summary in text form.
+                Do not invent numbers. 
+                Do tell the user about their current financial condition, how it compares to last month, and provide insights on how to improve their financial sustainability.
+                Do tell their largest expense and give advice on how to reduce it if possible.
 
-            Write a concise monthly financial summary in text form.
-            Do not invent numbers.
-            Do not add strange symbols like ""\n"". Give 'Enter' properly.
+                The currency used is Indonesian Rupiah (IDR). Hence, every amount must be preceded with Rp.
 
-            The currency used is Indonesian Rupiah (IDR). Hence, every amount must be preceded with Rp.
+                Data:
+                Current Month Snapshot: ${JSON.stringify(currentFinancialJSON)}
+                Last Month Snapshot: ${JSON.stringify(lastMonthFinacialJSON)}
+            `
+        });
 
-            Data:
-            ${JSON.stringify(aiData)}
-        `);
+        const detailedResponse = result.text;
 
-        const shortResult = await model.generateContent(`
-            You are a financial analyst.
-
-            Write a concise summary of the provided financial data in one sentence and not more than 30 words.
-            The summary must be in text form!
-            Do not invent numbers.
-
-            The currency used is Indonesian Rupiah (IDR). Hence, every amount must be preceded with Rp.
-
-            Data:
-            ${JSON.stringify(aiData)}
-        `);
-
-        const detailedResponse = result.response.text();
-        const summaryResponse = shortResult.response.text();
-
-        if(detailedResponse && summaryResponse) {
+        if(detailedResponse) {
             const insertContent = await sql`
                 INSERT INTO monthly_ai_report (user_id, ai_summary, data, ai_detailed_text, report_period) VALUES
                 (
                     ${user_id},
-                    ${summaryResponse},
-                    ${aiData},
+                    '',
+                    ${currentFinancialJSON},
                     ${detailedResponse},
                     date_trunc('month', CURRENT_DATE) - INTERVAL '1 month'
                 )
@@ -144,7 +131,7 @@ export const generateAnalysis = async (req: Request, res: Response) => {
         }
     } catch (error) {
         serverErrorMessage(res);
-        console.log("Error in generating AI analysis!", error)
+        console.log("Error in generating AI analysis!", error);
     }
 } 
 

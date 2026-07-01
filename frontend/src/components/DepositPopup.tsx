@@ -1,11 +1,11 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useState } from "react"
 
 import { useAuth } from "@/providers/AuthProvider"
 
 import { Transaction, TransactionCategory } from "@/hooks/useTransaction"
-import { DepositCard } from "@/hooks/useDeposit"
+import { DepositCard } from "@/hooks/useDepositList"
 
 import { useRupiahFormat } from "@/utils/currencyFormat"
 
@@ -27,6 +27,7 @@ interface DepositWithdrawPopup {
     id: string;
     amount: number;
     interest: number;
+    deadline: Date;
     setDeposit: React.Dispatch<React.SetStateAction<number>>;
     setCurrentBalance: React.Dispatch<React.SetStateAction<number>>;
     setDepositList: React.Dispatch<React.SetStateAction<DepositCard[]>>;
@@ -45,7 +46,7 @@ export function DepositInsertPopup({ setIsPopupOpen, setDeposit, setTransactions
     
     useEffect(() => {
         const handleGetTransactionCategories = async () => {
-            const transactionCategories = await api.get('/api/transactionCategory/get');
+            const transactionCategories = await api.get(`/api/transactionCategory/get`);
 
             setCategories(transactionCategories.data.data);
             setCategoryId(transactionCategories.data.data[0].id);
@@ -63,12 +64,7 @@ export function DepositInsertPopup({ setIsPopupOpen, setDeposit, setTransactions
         }
 
         try {
-
-            const responseUpdate = await api.patch(`/api/deposit/update/${user?.id}`, {
-                deposit: balance
-            });
-
-            const depositUpdate = await api.post(`/api/deposit/insert/list`, {
+            const depositUpdate = await api.post(`/api/deposit/list/insert`, {
                 user_id: user?.id, 
                 bank_name: bankName,
                 deposit_category: categoryId,
@@ -91,7 +87,6 @@ export function DepositInsertPopup({ setIsPopupOpen, setDeposit, setTransactions
                 setTransactions(prev => [...prev, ...insertResponse.data.data]);
                 setDeposit(prev => prev + balance);
                 setIsPopupOpen(false);
-                setBalance(0);
 
                 toast.success(`Successfully added ${useRupiahFormat(balance)} into deposit!`)
             }
@@ -166,10 +161,12 @@ export function DepositInsertPopup({ setIsPopupOpen, setDeposit, setTransactions
     )
 }
 
-export function DepositWithdrawPopup({ id, amount, interest, setDeposit, setCurrentBalance, setDepositList, setIsPopupOpen }: DepositWithdrawPopup) {
+export function DepositWithdrawPopup({ id, amount, interest, deadline, setDeposit, setCurrentBalance, setDepositList, setIsPopupOpen }: DepositWithdrawPopup) {
     const { user } = useAuth();
 
     const [categoryId, setCategoryId] = useState<string>('');
+
+    const afterDeadline = new Date(Date.now()) > new Date(deadline);
 
     useEffect(() => {
         const handleGetTransactionCategories = async () => {
@@ -188,18 +185,18 @@ export function DepositWithdrawPopup({ id, amount, interest, setDeposit, setCurr
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
+        if(!afterDeadline) {
+            return;
+        }
+
         const balanceWithInterest = Number(amount) + Number((amount * interest) / 100);
 
         try {
-            const responseUpdate = await api.patch(`/api/deposit/update/reduce/${user?.id}`, {
-                deposit: amount
-            });
-
-            await api.patch(`/api/currentBalance/update/${user?.id}`, {
+            const updateBalance = await api.patch(`/api/currentBalance/update/${user?.id}`, {
                 current_balance: balanceWithInterest
             });
 
-            if(responseUpdate.status === 201) {
+            if(updateBalance.status === 201) {
                 await api.post(`/api/transactionLog/insert`, 
                     {
                         user_id: user?.id, 
@@ -213,7 +210,7 @@ export function DepositWithdrawPopup({ id, amount, interest, setDeposit, setCurr
                 setDeposit(prev => prev - amount);
                 setCurrentBalance(prev => prev + amount);
                 
-                await api.delete(`/api/deposit/delete/list/${user?.id}`, {
+                await api.delete(`/api/deposit/list/delete/${user?.id}`, {
                     data: {
                         deposit_id: id,
                     }
@@ -248,7 +245,7 @@ export function DepositWithdrawPopup({ id, amount, interest, setDeposit, setCurr
                             thousandSeparator="."
                             decimalSeparator=","
                             prefix="Rp "
-                            className="bg-white block w-full border-2 rounded-lg text-sm p-1 md:p-2 md:text-base"
+                            className="bg-white text-gray-400 block w-full border-black border-2 rounded-lg text-sm p-1 md:p-2 md:text-base"
                             readOnly
                         />
                     </section>
@@ -259,11 +256,11 @@ export function DepositWithdrawPopup({ id, amount, interest, setDeposit, setCurr
                             thousandSeparator="."
                             decimalSeparator=","
                             suffix="%"
-                            className="bg-white block w-full border-2 rounded-lg text-sm p-1 md:p-2 md:text-base"
+                            className="bg-white text-gray-400 block w-full border-black border-2 rounded-lg text-sm p-1 md:p-2 md:text-base"
                             readOnly
                         />
                     </section>
-                    <button type="submit" className="bg-[#C39F4A] cursor-pointer rounded-md mt-4 px-8 py-1.5 text-white text-sm font-semibold md:text-base">Withdraw</button>
+                    <button type="submit" disabled={afterDeadline} className={`${afterDeadline ? 'opacity-100 cursor-pointer' : 'opacity-50 cursor-no-drop'} bg-[#C39F4A] rounded-md mt-4 px-8 py-1.5 text-white text-sm font-semibold md:text-base`}>Withdraw</button>
                 </form>
             </div>
         </div>

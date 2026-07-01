@@ -3,10 +3,11 @@
 import { useEffect, useState } from "react";
 
 import { useFinance } from "@/providers/FinanceProvider";
+import { useDeposit } from "@/providers/DepositProvider";
 
 import InfoCard from "@/components/InfoCard";
 import ExpensePopup from "@/components/ExpensePopup";
-import { DepositInsertPopup, DepositWithdrawPopup } from "@/components/DepositPopup";
+import { DepositInsertPopup } from "@/components/DepositPopup";
 import CurrentBalancePopup from "@/components/CurrentBalancePopup";
 
 import { ResponsivePie } from '@nivo/pie';
@@ -19,7 +20,8 @@ import { useRouter } from "next/navigation";
 function TheVault() {
     const depositListRouter = useRouter();
 
-    const { currentBalance, expense, deposit, setCurrentBalance, setExpense, setDeposit } = useFinance();
+    const { currentBalance, expense, setCurrentBalance, setExpense } = useFinance();
+    const { deposit, setDeposit } = useDeposit();
     const { transactions, setTransactions, loading } = useTransaction("this_month");
 
     const [currentBalancePopup, setCurrentBalancePopup] = useState<boolean>(false);
@@ -91,7 +93,7 @@ function TheVault() {
                 <section className="bg-[#FFFDF0] col-span-1 row-start-3 rounded-2xl shadow-lg lg:h-[16rem]">
                     <div className="mx-5 flex flex-col h-full">
                         <div className="pt-3 pb-2 flex lg:py-4">
-                            <h1 className="title-card">Deposit</h1>
+                            <h1 className="title-card">Time Deposit</h1>
                             <InfoCard 
                                 text="Deposit helps you track how much you've saved in real-life deposits."
                             />

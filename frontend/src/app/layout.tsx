@@ -3,6 +3,7 @@ import "./globals.css";
 
 import AuthProvider from "@/providers/AuthProvider";
 import FinanceProvider from "@/providers/FinanceProvider";
+import DepositProvider from "@/providers/DepositProvider";
 import ToastProvider from "@/providers/ToastProvider";
 
 export const metadata: Metadata = {
@@ -16,7 +17,9 @@ export default function RootLayout({ children }: Readonly<{children: React.React
       <body>
         <AuthProvider>
           <FinanceProvider>
-            { children }
+            <DepositProvider>
+              { children }
+            </DepositProvider>
           </FinanceProvider>
           <ToastProvider/>
         </AuthProvider>

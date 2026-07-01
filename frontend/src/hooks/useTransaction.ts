@@ -31,7 +31,7 @@ function useTransaction(range: string) {
 
         const fetchAllLogs = async () => {
             try {
-                const response = await api.get(`/api/transactionLog/get/all/${user?.id}?range=${range}`);
+                const response = await api.get(`/api/transactionLog/all/get/${user?.id}?range=${range}`);
     
                 setTransactions(response.data.data);
             } catch (error) {

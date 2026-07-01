@@ -7,7 +7,9 @@ import { useRupiahFormat } from "@/utils/currencyFormat";
 import { toast } from "react-toastify";
 import { DepositWithdrawPopup } from "@/components/DepositPopup";
 import { useFinance } from "@/providers/FinanceProvider";
-import useDeposit from "@/hooks/useDeposit";
+import { useDeposit } from "@/providers/DepositProvider";
+
+import useDepositList from "@/hooks/useDepositList";
 
 export type DepositCard = {
     id: string;
@@ -19,8 +21,9 @@ export type DepositCard = {
 }
 
 function DepositList() {
-    const { setCurrentBalance, setDeposit } = useFinance();
-    const { depositList, setDepositList } = useDeposit();
+    const { setCurrentBalance } = useFinance();
+    const { setDeposit } = useDeposit();
+    const { depositList, setDepositList } = useDepositList();
 
     const [isPopupOpen, setIsPopupOpen] = useState<DepositCard | null>(null);
 
@@ -31,6 +34,7 @@ function DepositList() {
                     id={isPopupOpen.id}
                     amount={isPopupOpen.amount}
                     interest={isPopupOpen.interest}
+                    deadline={isPopupOpen.deadline}
                     setDeposit={setDeposit}
                     setCurrentBalance={setCurrentBalance}
                     setDepositList={setDepositList}
