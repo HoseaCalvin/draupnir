@@ -5,9 +5,9 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/app.js",
-    "dev": "ts-node-dev --respawn --transpile-only --exit-child src/app.ts",
-    "scheduler": "ts-node-dev --transpile-only --exit-child src/queues/scheduler.ts",
-    "worker": "ts-node-dev --transpile-only --exit-child src/queues/worker.ts",
+    "dev": "tsx watch --inspect src/app.ts",
+    "scheduler": "tsx watch src/queues/scheduler.ts",
+    "worker": "tsx watch src/queues/worker.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -39,6 +39,7 @@
     "@types/node": "^24.7.0",
     "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
+    "tsx": "^4.22.4",
     "typescript": "^5.9.3"
   }
 }

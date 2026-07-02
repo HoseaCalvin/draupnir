@@ -11,6 +11,7 @@ import { WalletIcon, ExpenseIcon, CashflowIcon } from "@/components/SVGIcons";
 
 import { useFinance } from "@/providers/FinanceProvider";
 import { useAuth } from "@/providers/AuthProvider";
+import { useDeposit } from "@/providers/DepositProvider";
 
 import { toast } from "react-toastify";
 
@@ -32,9 +33,11 @@ interface AiSummary {
 function Home() {
     const { user } = useAuth();
     const { currentBalance, expense } = useFinance();
+    const { deposit } = useDeposit();
 
     const [financeHistory, setFinanceHistory] = useState<FinanceHistory[]>([]);
-    const [aiSummary, setAiSummary] = useState<AiSummary>();
+    const [isAiSummaryAvailable, setIsAiSummaryAvailable] = useState<AiSummary | null>(null);
+    const [aiSummaryLoading, setAiSummaryLoading] = useState<boolean>(false);
     const [openAiAnalysis, setOpenAiAnalysis] = useState<boolean>(false);
 
     useEffect(() => {
@@ -64,7 +67,7 @@ function Home() {
             try {
                 const fetch = await api.get(`/api/ai/summary/get/${user?.id}`)
 
-                setAiSummary(fetch.data.data[0]);
+                setIsAiSummaryAvailable(fetch.data.data[0]);
             } catch (error) {
                 console.error("Couldn't fetch AI analysis!", error);
             }
@@ -75,33 +78,32 @@ function Home() {
 
     const generateAnalysis = async () => {
         try {
-            await api.post('/api/ai/analysis/generate', {
+            setAiSummaryLoading(true);
+
+            const response = await api.post('/api/ai/analysis/generate', {
                 user_id: user?.id
             });
+
+            if(response.status === 201) {
+                setIsAiSummaryAvailable(response.data.data);
+                toast.success("AI analysis generated successfully!");
+            }
         } catch (error) {
             console.error("Couldn't generate AI analysis!", error);
             toast.error("There is an error in generating your analysis!");
+        } finally {
+            setAiSummaryLoading(false);
         }
     }
 
     const history = financeHistory?.map(history => ({
         "Period": new Date(history.recorded_date).toLocaleDateString("en-US", {
             month: "short",
-            year: "numeric",
         }),
         "Balance": history.balance_history / 100000,
         "Deposit": history.deposit_history / 100000,
         "Expense": history.expense_history / 100000
     }));
-
-    const recorded = aiSummary?.report_period ? new Date(aiSummary.report_period) : null;
-    const now = new Date();
-    const isLastMonth =
-        recorded &&
-        recorded.getMonth() === (now.getMonth() + 11) % 12 &&
-        recorded.getFullYear() === (
-            now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear()
-        );
 
     return(
         <>
@@ -113,7 +115,7 @@ function Home() {
             }
 
             <main className="frame-padding flex flex-col gap-y-5 lg:grid lg:grid-cols-2 lg:grid-rows-2 lg:gap-8">
-                <section className="bg-[#FFFDF0] col-span-2 lg:h-[22rem] rounded-2xl shadow-lg">
+                <section className="bg-[#FFFDF0] col-span-2 rounded-2xl shadow-lg lg:h-[22rem]">
                     <div className="mx-5 h-full flex flex-col">
                         <div className="pt-3 pb-2 lg:py-4">
                             <h1 className="title-card">Your Stashes</h1>
@@ -132,10 +134,16 @@ function Home() {
                                 icon={<ExpenseIcon/>}
                                 value={expense}
                             />
+                            <StashCard
+                                border="#C94C4C" 
+                                title="Time Deposit"
+                                icon={<ExpenseIcon/>}
+                                value={deposit}
+                            />
                         </div>
                     </div>
                 </section>
-                <section className="bg-[#FFFDF0] col-span-2 h-[22rem] rounded-2xl shadow-lg">
+                <section className="bg-[#FFFDF0] col-span-2 rounded-2xl h-[16rem] shadow-lg lg:h-[22rem]">
                     <div className="mx-5 h-full flex flex-col">
                         <div className="flex pt-3 pb-2 lg:py-4">
                             <h1 className="title-card">Mimir's Insight</h1>
@@ -145,14 +153,26 @@ function Home() {
                         </div>
                         <hr/>
                         <div className="flex flex-col justify-center items-center h-full">
-                            <h2 className="text-xl text-center py-4 lg:px-2">
-                                {aiSummary?.ai_summary ?? `You have not generated your financial analysis yet. Your account must at least have financial history first!`}
-                            </h2>
-                            { isLastMonth ?
+                            { aiSummaryLoading ?
+                                <div className="flex flex-col justify-center w-full max-w-[90%] my-3 gap-y-1.5 md:max-w-[75%] lg:my-4 lg:gap-y-2">
+                                    <span className="bg-gray-300 flex justify-center animate-pulse py-2 rounded-full w-full md:py-2.5"></span>
+                                    <span className="bg-gray-300 flex justify-center animate-pulse py-2 rounded-full w-full md:py-2.5"></span>
+                                    <span className="bg-gray-300 flex justify-center animate-pulse py-2 rounded-full w-full md:py-2.5"></span>
+                                </div>
+                                :
+                                <h2 className="text-sm text-center py-4 lg:px-2 lg:text-lg xl:text-xl">
+                                    { isAiSummaryAvailable ? 
+                                        `Mimir has analyzed your financial data for this month. Click to view his insights!` 
+                                        : 
+                                        `You have not generated your financial analysis yet. Your account must at least have financial history first!`
+                                    }
+                                </h2>
+                            }
+                            { isAiSummaryAvailable ?
                                 (
                                     <button onClick={() => setOpenAiAnalysis(true)} className="main-button py-1.5 px-3 text-sm lg:text-base">View Analysis</button>
                                 ) : (
-                                    <button onClick={generateAnalysis} className="main-button py-1.5 px-3 text-sm lg:text-base">Generate Analysis</button>
+                                    <button disabled={aiSummaryLoading || financeHistory.length === 0} onClick={generateAnalysis} className={`${aiSummaryLoading || financeHistory.length === 0 ? 'main-button-disabled' : 'main-button'} py-1.5 px-3 text-sm lg:text-base`}>Generate Analysis</button>
                                 )
                             }
 
@@ -162,7 +182,7 @@ function Home() {
                 <section className="block bg-[#FFFDF0] col-span-2 h-auto rounded-2xl shadow-lg">
                     <div className="mx-5 h-full flex flex-col">
                         <div className="flex pt-3 pb-2 lg:py-4">
-                            <h1 className="title-card">Financial History</h1>
+                            <h1 className="title-card">Financial History {new Date().getFullYear()}</h1>
                             <InfoCard 
                                 text="Amount is displayed in Million (Rupiah)."
                             />
@@ -171,7 +191,7 @@ function Home() {
                         <div className="flex justify-center items-center w-full h-[500px] lg:h-[640px]">
                             <div className="hidden w-screen h-full px-2 md:block">
                                 <ResponsiveBar
-                                    data={history}
+                                    data={history || []}
                                     keys={["Balance", "Deposit", "Expense"]}
                                     indexBy="Period"
                                     labelSkipWidth={14}
@@ -183,7 +203,7 @@ function Home() {
                             </div>
                             <div className="block w-screen h-full px-2 md:hidden">
                                 <ResponsiveBar
-                                    data={history}
+                                    data={history || []}
                                     keys={["Balance", "Deposit", "Expense"]}
                                     indexBy="Period"
                                     isInteractive={false}

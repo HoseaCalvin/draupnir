@@ -12,19 +12,33 @@ export const generateAnalysis = async (req: Request, res: Response) => {
         return failedMessage(res, "user_id is missing!");
     }
 
+    let currentFinance:  Record<string, any>[] = [];
+    let currentLargestExpense: Record<string, any>[] = [];
+    let pastFinancial: Record<string, any>[] = [];
+    let pastLargestExpense: Record<string, any>[] = [];
+
     try {
-        const currentFinance = await sql`
+        currentFinance = await sql`
             SELECT
                 balance,
-                deposit,
+                SUM(amount)::INTEGER AS deposit,
                 expense
             FROM
-                finance
+                finance f
+                JOIN deposit_list dl ON f.user_id = dl.user_id
             WHERE
-                user_id = ${user_id};
+                f.user_id = ${user_id}
+            GROUP BY
+                balance,
+                expense;
         `
+    } catch (error) {
+        console.log("Error in fetching currentFinance!", error);
+        return serverErrorMessage(res, error);
+    }
 
-        const currentLargestExpense = await sql`
+    try {
+        currentLargestExpense = await sql`
             SELECT
                 amount,
                 category
@@ -40,8 +54,13 @@ export const generateAnalysis = async (req: Request, res: Response) => {
                 amount DESC
             LIMIT 1;
         `
+    } catch (error) {
+        console.log("Error in fetching currentLargestExpense!", error);
+        return serverErrorMessage(res, error);
+    }
 
-        const pastFinancial = await sql`
+    try {
+        pastFinancial = await sql`
             SELECT
                 balance_history,
                 deposit_history,
@@ -53,8 +72,13 @@ export const generateAnalysis = async (req: Request, res: Response) => {
                 AND recorded_date >= date_trunc('month', CURRENT_DATE) - INTERVAL '1 month'
                 AND recorded_date < date_trunc('month', CURRENT_DATE);
         `
+    } catch (error) {
+        console.log("Error in fetching pastFinancial!", error);
+        return serverErrorMessage(res, error);
+    }
 
-        const pastLargestExpense = await sql`
+    try {
+        pastLargestExpense = await sql`
             SELECT
                 amount,
                 category
@@ -70,29 +94,34 @@ export const generateAnalysis = async (req: Request, res: Response) => {
                 amount DESC
             LIMIT 1;
         `
+    } catch (error) {
+        console.log("Error in fetching pastLargestExpense!", error);
+        return serverErrorMessage(res, error);
+    }
 
-        const currentFinancialJSON = currentFinance.map((record: any) => ({
-            balance: Number(record.balance) ?? 0,
-            deposit: Number(record.deposit) ?? 0,
-            expense: Number(record.expense) ?? 0,
-            largest_expense: {
-                amount: Number(currentLargestExpense[0]?.amount) ?? 0,
-                category: currentLargestExpense[0]?.category ?? 'None'
-            }
-        }));
+    const currentFinancialJSON = currentFinance.map((record: any) => ({
+        balance: Number(record.balance || 0),
+        deposit: Number(record.deposit || 0),
+        expense: Number(record.expense || 0),
+        largest_expense: {
+            amount: Number(currentLargestExpense[0]?.amount || 0),
+            category: currentLargestExpense[0]?.category ?? 'None'
+        }
+    }));
 
-        const lastMonthFinacialJSON = pastFinancial.map((record: any) => ({
-            balance: Number(record.balance_history) ?? 0,
-            deposit: Number(record.deposit_history) ?? 0,
-            expense: Number(record.expense_history) ?? 0,
-            largest_expense: {
-                amount: Number(pastLargestExpense[0]?.amount) ?? 0,
-                category: pastLargestExpense[0]?.category ?? 'None'
-            }
-        }));
+    const lastMonthFinacialJSON = pastFinancial.map((record: any) => ({
+        balance: Number(record.balance_history || 0),
+        deposit: Number(record.deposit_history || 0),
+        expense: Number(record.expense_history || 0),
+        largest_expense: {
+            amount: Number(pastLargestExpense[0]?.amount || 0),
+            category: pastLargestExpense[0]?.category ?? 'None'
+        }
+    }));
         
+    try {
         const result = await ai.models.generateContent({
-            model: 'gemini-2.5-flash', // Explicitly pass the model name here
+            model: 'gemini-2.5-flash',
             contents: `
                 You are a senior financial analyst.
 
@@ -103,6 +132,14 @@ export const generateAnalysis = async (req: Request, res: Response) => {
 
                 The currency used is Indonesian Rupiah (IDR). Hence, every amount must be preceded with Rp.
 
+                Requirements:
+                - Use ## for section headings.
+                - Use **bold** for important numbers and section titles.
+                - Use bullet points instead of long paragraphs.
+                - Use double new lines to separate paragraphs.
+                - Separate paragraphs with blank lines.
+                - Do not wrap the response in triple backticks.
+                
                 Data:
                 Current Month Snapshot: ${JSON.stringify(currentFinancialJSON)}
                 Last Month Snapshot: ${JSON.stringify(lastMonthFinacialJSON)}
@@ -117,7 +154,7 @@ export const generateAnalysis = async (req: Request, res: Response) => {
                 (
                     ${user_id},
                     '',
-                    ${currentFinancialJSON},
+                    ${JSON.stringify(currentFinancialJSON)},
                     ${detailedResponse},
                     date_trunc('month', CURRENT_DATE) - INTERVAL '1 month'
                 )
@@ -126,12 +163,12 @@ export const generateAnalysis = async (req: Request, res: Response) => {
             if(!insertContent) {
                 return failedMessage(res, "Failed to insert AI generation into table!");
             }
-
-            successMessage(res, insertContent);
         }
+
+        successMessage(res, detailedResponse);
     } catch (error) {
-        serverErrorMessage(res);
         console.log("Error in generating AI analysis!", error);
+        return serverErrorMessage(res, error);
     }
 } 
 

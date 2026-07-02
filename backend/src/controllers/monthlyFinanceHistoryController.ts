@@ -54,6 +54,7 @@ export const getHistory = async (req: Request, res: Response) => {
                 monthly_finance_history
             WHERE
                 user_id = ${user_id}
+                AND EXTRACT(YEAR FROM recorded_date) = EXTRACT(YEAR FROM CURRENT_DATE)
             ORDER BY
                 recorded_date
         `

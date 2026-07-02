@@ -1,13 +1,14 @@
 import { Response } from "express"
 
-export function serverErrorMessage(res: Response) {
+export function serverErrorMessage(res: Response, Object?: any) {
     console.log(res.status(500).json({
         success: false,
         message: "Internal Server Error!",
+        data: Object
     }))
 }
 
-export function successMessage(res: Response, Object: Object) {
+export function successMessage(res: Response, Object: any) {
     console.log(res.status(201).json({
         success: true,
         data: Object
