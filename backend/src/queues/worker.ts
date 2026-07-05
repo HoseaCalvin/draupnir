@@ -1,5 +1,4 @@
 import { Worker } from "bullmq";
-import { sql } from "../configs/database";
 import { connection } from "../configs/redis";
 import { recordMonthlyFinancialReport, runMonthlyIncome, runMonthlyExpense } from "./jobs";
 
@@ -16,7 +15,7 @@ new Worker("tasks", async job => {
     }
 }, { 
     connection, 
-    concurrency: 1 
+    concurrency: 10 
 });
 
 console.log("Worker started successfully!");

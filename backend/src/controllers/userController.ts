@@ -28,7 +28,7 @@ export const verifyUser = async (req: Request, res: Response) => {
         `
 
         if(getUser.length === 0) {
-            return failedMessage(res, "User not found!");
+            return failedMessage(res, "verifyUser: User not found!");
         }
 
         const user = getUser[0];

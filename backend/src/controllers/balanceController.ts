@@ -1,7 +1,7 @@
 import { Response, Request } from "express";
 
 import { sql } from "../configs/database";
-import { serverErrorMessage, notFoundMesage, successMessage, failedMessage } from "../misc/messages";
+import { serverErrorMessage, successMessage, failedMessage } from "../misc/messages";
 
 export const getBalance = async (req: Request, res: Response) => {
     const { user_id } = req.params;

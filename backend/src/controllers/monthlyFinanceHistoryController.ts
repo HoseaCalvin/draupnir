@@ -1,43 +1,7 @@
 import { Request, Response } from "express";
 
 import { sql } from "../configs/database";
-import { failedMessage, notFoundMesage, serverErrorMessage, successMessage } from "../misc/messages";
-
-export const insertHistory = async (user_id: string) => {
-    if(!user_id) {
-        console.log("User ID is missing!");
-        return;
-    }
-
-    try {
-        const insert = await sql`
-            INSERT INTO monthly_finance_history
-                SELECT
-                  gen_random_uuid(),
-                  user_id,
-                  balance,
-                  deposit,
-                  expense,
-                  recorded_date             
-                FROM
-                    finance
-                WHERE
-                    user_id = ${user_id} 
-                    AND recorded_date >= date_trunc('month', CURRENT_DATE) - INTERVAL '1 month'
-                    AND recorded_date < date_trunc('month', CURRENT_DATE)
-            RETURNING
-                *
-        `
-
-        if(insert.length === 0) {
-            console.log("User not found!");
-            return;
-        }
-
-    } catch (error) {
-        console.error("There was an error while inserting your financial report!", error);
-    }
-}
+import { notFoundMesage, serverErrorMessage, successMessage } from "../misc/messages";
 
 export const getHistory = async (req: Request, res: Response) => {
     const { user_id } = req.params;
@@ -62,5 +26,42 @@ export const getHistory = async (req: Request, res: Response) => {
         successMessage(res, getHistory);
     } catch (error) {
         serverErrorMessage(res);
+    }
+}
+
+export const insertHistory = async (user_id: string) => {
+    if(!user_id) {
+        console.log("User ID is missing!");
+        return;
+    }
+
+    let insert: Record<string, any>[] = [];
+    try {
+        insert = await sql`
+            INSERT INTO monthly_finance_history
+                SELECT
+                  gen_random_uuid(),
+                  user_id,
+                  balance,
+                  deposit,
+                  expense,
+                  recorded_date             
+                FROM
+                    finance
+                WHERE
+                    user_id = ${user_id}
+            RETURNING
+                *
+        `
+
+        if(insert.length === 0) {
+            console.log("User not found or query returned no results!");
+            return [];
+        }
+
+        return insert;
+    } catch (error) {
+        console.error("There was an error while inserting your financial report!", error);
+        return [];
     }
 }

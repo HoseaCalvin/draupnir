@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 
 import { sql } from "../configs/database";
-import { failedMessage, notFoundMesage, serverErrorMessage, successMessage } from "../misc/messages";
+import { failedMessage, serverErrorMessage, successMessage } from "../misc/messages";
 
 export const insertTransactionLog = async (req: Request, res: Response) => {
     const { user_id, recorded_date, transaction_name, amount, category_id } = req.body;
@@ -70,7 +70,7 @@ export const getAllTransactionLog = async (req: Request, res: Response) => {
                 lowerBoundDate.setHours(0, 0, 0, 0);
 
                 upperBoundDate = new Date();
-                upperBoundDate.setFullYear(upperBoundDate.getFullYear());
+                upperBoundDate.setFullYear(upperBoundDate.getFullYear() - 1);
                 break;
             case "all":
                 lowerBoundDate = new Date(0);

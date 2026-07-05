@@ -111,7 +111,7 @@ function TheVault() {
                 <section className="bg-[#FFFDF0] row-span-2 h-full rounded-2xl shadow-lg">
                     <div className="mx-5">
                         <div className="pt-3 pb-2 flex lg:py-4">
-                            <h1 className="title-card">Cashflow</h1>
+                            <h1 className="title-card">Distribution</h1>
                             <InfoCard 
                                 text="Cashflow displays detailed distribution of your financial activities in the current month."
                             />
@@ -123,7 +123,7 @@ function TheVault() {
                                     data={[
                                         { id: 'Current Balance', label: 'Current Balance', value: currentBalance },
                                         { id: 'Expense', label: 'Expense', value: expense },
-                                        { id: 'Emergency Fund', label: 'Emergency Fund', value: deposit }
+                                        { id: 'Deposit', label: 'Deposit', value: deposit }
                                     ]}
                                     innerRadius={0.55}
                                     padAngle={0.7}

@@ -220,19 +220,3 @@ export const getAnalysis = async (req: Request, res: Response) => {
         serverErrorMessage(res);        
     }
 }
-
-export const chat = async (req: Request, res: Response) => {
-    const { prompt } = req.body;
-
-    if(!prompt) {
-        return failedMessage(res, "Prompt must not be empty!");
-    }
-
-    
-}
-
-// Save the response in a table to prevent constant generation every time user starts the app.
-// Fetch the response after creation.
-// If a new month starts, prompt the AI to generate anothe response.
-
-// The table should save ID, date, and response text.

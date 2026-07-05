@@ -32,57 +32,6 @@ export const insertMonthlyExpense = async (req: Request, res: Response) => {
     }
 }
 
-export const resetExpense = async () => {
-    try {
-        const resetExpense = await sql`
-            UPDATE
-                finance
-            SET
-                expense = 0
-        `
-
-        return resetExpense;
-    } catch (error) {
-        console.error("Error in resetting expense!", error);        
-    }
-}
-
-export const reduceBalance = async (user_id: string) => {
-    if(!user_id) {
-        console.log("User ID is missing!");
-    }
-
-    try {
-        const reduceBalance = await sql`
-            UPDATE
-                finance
-            SET
-                expense = expense + (
-                    SELECT
-                        COALESCE(SUM(amount), 0)
-                    FROM
-                        expense_list
-                    WHERE
-                        user_id = ${user_id}
-                ),
-                balance = balance - (
-                    SELECT
-                        COALESCE(SUM(amount), 0)
-                    FROM
-                        expense_list
-                    WHERE
-                        user_id = ${user_id}
-                )
-            WHERE
-                user_id = ${user_id};
-        `
-
-        return reduceBalance;
-    } catch (error) {
-        console.error("Error in reducing balance!", error);
-    }
-}
-
 export const getMonthlyExpense = async (req: Request, res: Response) => {
     const { user_id } = req.params;
 
@@ -132,4 +81,56 @@ export const deleteMonthlyExpense = async (req: Request, res: Response) => {
     } catch (error) {
         serverErrorMessage(res);
     }    
+}
+
+export const resetExpense = async () => {
+    try {
+        const resetExpense = await sql`
+            UPDATE
+                finance
+            SET
+                expense = 0
+        `
+
+        return resetExpense;
+    } catch (error) {
+        console.error("Error in resetting expense!", error);        
+    }
+}
+
+export const reduceBalance = async (user_id: string) => {
+    if(!user_id) {
+        console.log("User ID is missing!");
+    }
+
+    try {
+        const reduceBalance = await sql`
+            UPDATE
+                finance
+            SET
+                expense = expense + (
+                    SELECT
+                        COALESCE(SUM(amount), 0)
+                    FROM
+                        expense_list
+                    WHERE
+                        user_id = ${user_id}
+                ),
+                balance = balance - (
+                    SELECT
+                        COALESCE(SUM(amount), 0)
+                    FROM
+                        expense_list
+                    WHERE
+                        user_id = ${user_id}
+                )
+            WHERE
+                user_id = ${user_id};
+        `
+
+        return reduceBalance;
+    } catch (error) {
+        console.error("Error in reducing balance!", error);
+        return error;
+    }
 }

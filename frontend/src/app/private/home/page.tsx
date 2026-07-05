@@ -123,7 +123,7 @@ function Home() {
                         <hr/>
                         <div className="overflow-x-auto flex justify-start items-center h-full py-7 xl:p-7 sm:justify-center md:justify-start">
                             <StashCard
-                                border="#EBC600" 
+                                border="#6BBF59" 
                                 title="Current Balance"
                                 icon={<WalletIcon/>}
                                 value={currentBalance}
@@ -135,7 +135,7 @@ function Home() {
                                 value={expense}
                             />
                             <StashCard
-                                border="#C94C4C" 
+                                border="#C4A500" 
                                 title="Time Deposit"
                                 icon={<ExpenseIcon/>}
                                 value={deposit}
@@ -154,11 +154,7 @@ function Home() {
                         <hr/>
                         <div className="flex flex-col justify-center items-center h-full">
                             { aiSummaryLoading ?
-                                <div className="flex flex-col justify-center w-full max-w-[90%] my-3 gap-y-1.5 md:max-w-[75%] lg:my-4 lg:gap-y-2">
-                                    <span className="bg-gray-300 flex justify-center animate-pulse py-2 rounded-full w-full md:py-2.5"></span>
-                                    <span className="bg-gray-300 flex justify-center animate-pulse py-2 rounded-full w-full md:py-2.5"></span>
-                                    <span className="bg-gray-300 flex justify-center animate-pulse py-2 rounded-full w-full md:py-2.5"></span>
-                                </div>
+                                <h2 className="text-sm text-center py-4 lg:px-2 lg:text-lg xl:text-xl">Mimir is analyzing your financial data. Please wait a moment...</h2>
                                 :
                                 <h2 className="text-sm text-center py-4 lg:px-2 lg:text-lg xl:text-xl">
                                     { isAiSummaryAvailable ? 
@@ -175,7 +171,6 @@ function Home() {
                                     <button disabled={aiSummaryLoading || financeHistory.length === 0} onClick={generateAnalysis} className={`${aiSummaryLoading || financeHistory.length === 0 ? 'main-button-disabled' : 'main-button'} py-1.5 px-3 text-sm lg:text-base`}>Generate Analysis</button>
                                 )
                             }
-
                         </div>
                     </div>
                 </section> 

@@ -28,34 +28,6 @@ export const insertMonthlyIncome = async (req: Request, res: Response) => {
     }
 }
 
-export const addIncomeToBalance = async (user_id: string) => {
-    if(!user_id) {
-        console.log("User ID is missing!");
-    }
-
-    try {
-        const appendBalance = await sql`
-            UPDATE
-                finance
-            SET
-                balance = balance + (
-                    SELECT
-                        COALESCE(SUM(amount), 0)
-                    FROM
-                        income_list
-                    WHERE
-                        user_id = ${user_id}
-                )
-            WHERE
-                user_id = ${user_id};
-        `
-
-        return appendBalance;
-    } catch (error) {
-        console.error("There was an error while adding income to your balance!", error);
-    }
-}
-
 export const getMonthlyIncome = async (req: Request, res: Response) => {
     const { user_id } = req.params;
 
@@ -91,8 +63,8 @@ export const deleteMonthlyIncome = async (req: Request, res: Response) => {
             DELETE FROM
                 income_list
             WHERE
-                id = ${id} AND
-                user_id = ${user_id}
+                id = ${id} 
+                AND user_id = ${user_id}
             RETURNING
                 *
         `
@@ -104,5 +76,33 @@ export const deleteMonthlyIncome = async (req: Request, res: Response) => {
         successMessage(res, deleteIncome);
     } catch (error) {
         serverErrorMessage(res);
+    }
+}
+
+export const insertIncomeToBalance = async (user_id: string) => {
+    if(!user_id) {
+        console.log("User ID is missing!");
+    }
+
+    try {
+        const appendBalance = await sql`
+            UPDATE
+                finance
+            SET
+                balance = balance + (
+                    SELECT
+                        COALESCE(SUM(amount), 0)
+                    FROM
+                        income_list
+                    WHERE
+                        user_id = ${user_id}
+                )
+            WHERE
+                user_id = ${user_id};
+        `
+
+        return appendBalance;
+    } catch (error) {
+        console.error("There was an error while adding income to your balance!", error);
     }
 }
