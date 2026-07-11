@@ -47,7 +47,30 @@ export const getMonthlyIncome = async (req: Request, res: Response) => {
 
         successMessage(res, getIncome);
     } catch (error) {
-        serverErrorMessage(res);
+        serverErrorMessage(res, error);
+    }
+}
+
+export const getTotalAmountOfMonthlyIncome = async (req: Request, res: Response) => {
+    const { user_id } = req.params;
+
+    if(!user_id) {
+        return failedMessage(res, "User ID is missing!");
+    }
+
+    try {
+        const getTotalIncome = await sql`
+            SELECT
+                SUM(amount) AS total_income
+            FROM
+                income_list
+            WHERE
+                user_id = ${user_id}
+        `
+        
+        successMessage(res, getTotalIncome[0]);
+    } catch (error) {
+        serverErrorMessage(res, error);
     }
 }
 
@@ -75,7 +98,7 @@ export const deleteMonthlyIncome = async (req: Request, res: Response) => {
 
         successMessage(res, deleteIncome);
     } catch (error) {
-        serverErrorMessage(res);
+        serverErrorMessage(res, error);
     }
 }
 

@@ -55,6 +55,29 @@ export const getMonthlyExpense = async (req: Request, res: Response) => {
     }
 }
 
+export const getTotalAmountOfMonthlyExpense = async (req: Request, res: Response) => {
+    const { user_id } = req.params;
+
+    if(!user_id) {
+        return failedMessage(res, "User ID is missing!");
+    }
+
+    try {
+        const getTotalExpense = await sql`
+            SELECT
+                SUM(amount) AS total_expense
+            FROM
+                expense_list
+            WHERE
+                user_id = ${user_id}
+        `
+        
+        successMessage(res, getTotalExpense[0]);
+    } catch (error) {
+        serverErrorMessage(res, error);
+    }
+}
+
 export const deleteMonthlyExpense = async (req: Request, res: Response) => {
     const { id, user_id } = req.body;
 

@@ -32,7 +32,7 @@ function FinancialAnalysis({ isPopupOpen, setIsPopupOpen }: FinancialAnalysis) {
 
     return(
         <div className="fixed flex justify-center items-center h-screen w-screen z-30 bg-gray-500/30">
-            <div className={`flex flex-col bg-[#FFF8CD] w-[85%] h-[80%] py-3 px-5 rounded-2xl duration-500 ease-in-out lg:w-[850px] lg:h-[90%]`}>
+            <div className={`flex flex-col bg-[#FFF8CD] w-[85%] h-[80%] py-3 px-5 rounded-2xl duration-500 ease-in-out lg:w-[900px] lg:h-[90%]`}>
                 <div className="flex justify-between items-center">
                     <h3 className="font-bold text-sm py-1 lg:text-base">Mimir's Insight</h3>
                     <p onClick={() => setIsPopupOpen(false)} className="cursor-pointer text-3xl">&times;</p>

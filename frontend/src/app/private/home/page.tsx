@@ -11,7 +11,6 @@ import { WalletIcon, ExpenseIcon, CashflowIcon } from "@/components/SVGIcons";
 
 import { useFinance } from "@/providers/FinanceProvider";
 import { useAuth } from "@/providers/AuthProvider";
-import { useDeposit } from "@/providers/DepositProvider";
 
 import { toast } from "react-toastify";
 
@@ -33,7 +32,6 @@ interface AiSummary {
 function Home() {
     const { user } = useAuth();
     const { currentBalance, expense } = useFinance();
-    const { deposit } = useDeposit();
 
     const [financeHistory, setFinanceHistory] = useState<FinanceHistory[]>([]);
     const [isAiSummaryAvailable, setIsAiSummaryAvailable] = useState<AiSummary | null>(null);
@@ -114,8 +112,8 @@ function Home() {
                 />
             }
 
-            <main className="frame-padding flex flex-col gap-y-5 lg:grid lg:grid-cols-2 lg:grid-rows-2 lg:gap-8">
-                <section className="bg-[#FFFDF0] col-span-2 rounded-2xl shadow-lg lg:h-[22rem]">
+            <main className="frame-padding flex flex-col gap-y-5 lg:grid lg:grid-cols-2 lg:grid-rows-[1fr_h-fit_1fr] lg:gap-8">
+                <section className="bg-[#FFFDF0] row-start-1 col-span-2 rounded-2xl shadow-lg lg:h-[22rem]">
                     <div className="mx-5 h-full flex flex-col">
                         <div className="pt-3 pb-2 lg:py-4">
                             <h1 className="title-card">Your Stashes</h1>
@@ -134,16 +132,10 @@ function Home() {
                                 icon={<ExpenseIcon/>}
                                 value={expense}
                             />
-                            <StashCard
-                                border="#C4A500" 
-                                title="Time Deposit"
-                                icon={<ExpenseIcon/>}
-                                value={deposit}
-                            />
                         </div>
                     </div>
                 </section>
-                <section className="bg-[#FFFDF0] col-span-2 rounded-2xl h-[16rem] shadow-lg lg:h-[22rem]">
+                <section className="bg-[#FFFDF0] row-start-2 col-span-2 rounded-2xl h-[16rem] shadow-lg lg:h-[17rem]">
                     <div className="mx-5 h-full flex flex-col">
                         <div className="flex pt-3 pb-2 lg:py-4">
                             <h1 className="title-card">Mimir's Insight</h1>
@@ -174,7 +166,7 @@ function Home() {
                         </div>
                     </div>
                 </section> 
-                <section className="block bg-[#FFFDF0] col-span-2 h-auto rounded-2xl shadow-lg">
+                <section className="block bg-[#FFFDF0] row-start-3 col-span-2 h-auto rounded-2xl shadow-lg">
                     <div className="mx-5 h-full flex flex-col">
                         <div className="flex pt-3 pb-2 lg:py-4">
                             <h1 className="title-card">Financial History {new Date().getFullYear()}</h1>
@@ -199,7 +191,7 @@ function Home() {
                             <div className="block w-screen h-full px-2 md:hidden">
                                 <ResponsiveBar
                                     data={history || []}
-                                    keys={["Balance", "Deposit", "Expense"]}
+                                    keys={["Balance", "Expense"]}
                                     indexBy="Period"
                                     isInteractive={false}
                                     labelSkipWidth={14}

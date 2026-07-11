@@ -2,35 +2,32 @@
 
 import { useEffect, useState } from "react";
 
+import { useRouter } from "next/navigation";
+
 import { useFinance } from "@/providers/FinanceProvider";
-import { useDeposit } from "@/providers/DepositProvider";
 
 import InfoCard from "@/components/InfoCard";
 import ExpensePopup from "@/components/ExpensePopup";
-import { DepositInsertPopup } from "@/components/DepositPopup";
 import CurrentBalancePopup from "@/components/CurrentBalancePopup";
 
 import { ResponsivePie } from '@nivo/pie';
 
+import useTotalMonthlyIncome from "@/hooks/useTotalMonthlyIncome";
+import useTotalMonthlyExpense from "@/hooks/useTotalMonthlyExpense";
+import useTransaction from "@/hooks/useTransaction";
+
 import { useRupiahFormat } from "@/utils/currencyFormat";
 
-import useTransaction from "@/hooks/useTransaction";
-import { useRouter } from "next/navigation";
-
 function TheVault() {
-    const depositListRouter = useRouter();
-
     const { currentBalance, expense, setCurrentBalance, setExpense } = useFinance();
-    const { deposit, setDeposit } = useDeposit();
+    const { totalMonthlyIncome } = useTotalMonthlyIncome();
+    const { totalMonthlyExpense } = useTotalMonthlyExpense();
     const { transactions, setTransactions, loading } = useTransaction("this_month");
 
     const [currentBalancePopup, setCurrentBalancePopup] = useState<boolean>(false);
-    const [depositInsertPopup, setDepositInsertPopup] = useState<boolean>(false);
     const [expensePopup, setExpensePopup] = useState<boolean>(false);
 
-    function routeToDepositList() {
-        depositListRouter.push('/private/vault/deposit-list');
-    }
+    const router = useRouter();
 
     if(loading) {
         <div>
@@ -44,14 +41,6 @@ function TheVault() {
                 <CurrentBalancePopup
                     setIsPopupOpen={setCurrentBalancePopup}
                     setCurrentBalance={setCurrentBalance}
-                    setTransactions={setTransactions}
-                />
-            }
-
-            { depositInsertPopup &&
-                <DepositInsertPopup
-                    setIsPopupOpen={setDepositInsertPopup}
-                    setDeposit={setDeposit}
                     setTransactions={setTransactions}
                 />
             }
@@ -92,29 +81,32 @@ function TheVault() {
                 </section>
                 <section className="bg-[#FFFDF0] col-span-1 row-start-3 rounded-2xl shadow-lg lg:h-[16rem]">
                     <div className="mx-5 flex flex-col h-full">
-                        <div className="pt-3 pb-2 flex lg:py-4">
-                            <h1 className="title-card">Time Deposit</h1>
-                            <InfoCard 
-                                text="Deposit helps you track how much you've saved in real-life deposits."
-                            />
+                        <div className="pt-3 pb-2 lg:py-4">
+                            <h1 className="title-card">Monthly Income</h1>
                         </div>
                         <hr/>
                         <div className="flex flex-col justify-center items-center h-full mb-4 lg:mb-0 lg:space-y-3">
-                            <h2 className="p-4 text-xl text-center font-bold lg:text-4xl">{useRupiahFormat(deposit)}</h2>
-                            <div className="flex flex-col justify-center gap-x-3.5 gap-y-1.5 lg:w-full lg:flex-row">
-                                <button onClick={() => setDepositInsertPopup(true)} className="font-bold text-white text-xs bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg px-10 py-2 cursor-pointer lg:text-base">Add</button>
-                                <button onClick={routeToDepositList} className="font-bold text-white text-xs bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg px-10 py-2 cursor-pointer lg:text-base">List</button>
-                            </div>
+                            <h2 className="p-4 text-xl text-center font-bold lg:text-4xl">{useRupiahFormat(totalMonthlyIncome)}</h2>
+                            <button onClick={() => router.push("/private/vault/monthly-income")} className="font-bold text-white text-xs bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg px-10 py-2 cursor-pointer lg:text-base">View</button>
+                        </div>                        
+                    </div>
+                </section>
+                <section className="bg-[#FFFDF0] col-span-1 row-start-3 rounded-2xl shadow-lg lg:h-[16rem]">
+                    <div className="mx-5 flex flex-col h-full">
+                        <div className="pt-3 pb-2 lg:py-4">
+                            <h1 className="title-card">Monthly Expense</h1>
                         </div>
+                        <hr/>
+                        <div className="flex flex-col justify-center items-center h-full mb-4 lg:mb-0 lg:space-y-3">
+                            <h2 className="p-4 text-xl text-center font-bold lg:text-4xl">{useRupiahFormat(totalMonthlyExpense)}</h2>
+                            <button onClick={() => router.push("/private/vault/monthly-expense")} className="font-bold text-white text-xs bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg px-10 py-2 cursor-pointer lg:text-base">View</button>
+                        </div>                        
                     </div>
                 </section>
                 <section className="bg-[#FFFDF0] row-span-2 h-full rounded-2xl shadow-lg">
                     <div className="mx-5">
                         <div className="pt-3 pb-2 flex lg:py-4">
                             <h1 className="title-card">Distribution</h1>
-                            <InfoCard 
-                                text="Cashflow displays detailed distribution of your financial activities in the current month."
-                            />
                         </div>
                         <hr/>
                         <div className="flex justify-center items-center h-full">
@@ -123,7 +115,6 @@ function TheVault() {
                                     data={[
                                         { id: 'Current Balance', label: 'Current Balance', value: currentBalance },
                                         { id: 'Expense', label: 'Expense', value: expense },
-                                        { id: 'Deposit', label: 'Deposit', value: deposit }
                                     ]}
                                     innerRadius={0.55}
                                     padAngle={0.7}
@@ -146,7 +137,7 @@ function TheVault() {
                         </div>
                     </div>
                 </section>
-                <section className="bg-[#FFFDF0] col-span-1 h-full rounded-2xl shadow-lg">
+                <section className="bg-[#FFFDF0] col-span-2 h-full rounded-2xl shadow-lg">
                     <div className="mx-5">
                         <div className="pt-3 pb-2 flex lg:py-4">
                             <h1 className="text-xl title-card">Monthly Transaction Log</h1>

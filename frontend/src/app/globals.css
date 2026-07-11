@@ -9,7 +9,7 @@ body {
 }
 
 .frame-padding {
-  @apply px-7 pt-7 pb-24 lg:px-11 lg:py-10 md:pl-[18rem] lg:pl-[21rem];
+  @apply px-7 pt-7 pb-24 lg:px-11 lg:py-10 md:pl-[19rem] lg:pl-[20rem];
 }
 
 .menu-item {

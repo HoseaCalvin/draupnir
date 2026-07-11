@@ -21,13 +21,11 @@ export const generateAnalysis = async (req: Request, res: Response) => {
         currentFinance = await sql`
             SELECT
                 balance,
-                SUM(amount)::INTEGER AS deposit,
                 expense
             FROM
-                finance f
-                JOIN deposit_list dl ON f.user_id = dl.user_id
+                finance 
             WHERE
-                f.user_id = ${user_id}
+                user_id = ${user_id}
             GROUP BY
                 balance,
                 expense;
@@ -63,7 +61,6 @@ export const generateAnalysis = async (req: Request, res: Response) => {
         pastFinancial = await sql`
             SELECT
                 balance_history,
-                deposit_history,
                 expense_history
             FROM
                 monthly_finance_history
@@ -101,7 +98,6 @@ export const generateAnalysis = async (req: Request, res: Response) => {
 
     const currentFinancialJSON = currentFinance.map((record: any) => ({
         balance: Number(record.balance || 0),
-        deposit: Number(record.deposit || 0),
         expense: Number(record.expense || 0),
         largest_expense: {
             amount: Number(currentLargestExpense[0]?.amount || 0),
@@ -111,7 +107,6 @@ export const generateAnalysis = async (req: Request, res: Response) => {
 
     const lastMonthFinacialJSON = pastFinancial.map((record: any) => ({
         balance: Number(record.balance_history || 0),
-        deposit: Number(record.deposit_history || 0),
         expense: Number(record.expense_history || 0),
         largest_expense: {
             amount: Number(pastLargestExpense[0]?.amount || 0),

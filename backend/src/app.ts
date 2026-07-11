@@ -8,7 +8,6 @@ import cookieParser from "cookie-parser";
 
 import userRouter from "./routes/userRoutes";
 import currentBalanceRouter from "./routes/balanceRoutes";
-import depositRouter from "./routes/depositRoutes";
 import expenseRouter from "./routes/expenseRoutes";
 import goalRouter from "./routes/goalRoutes";
 import authRouter from "./routes/authRoutes";
@@ -37,7 +36,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/users", userRouter);
 app.use("/api/finance", financeRouter);
 app.use("/api/currentBalance", currentBalanceRouter);
-app.use("/api/deposit", depositRouter);
 app.use("/api/expense", expenseRouter);
 app.use("/api/goals", goalRouter);
 app.use("/api/transactionLog", transactionLogRouter);

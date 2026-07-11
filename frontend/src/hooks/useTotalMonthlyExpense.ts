@@ -2,20 +2,12 @@ import { useState, useEffect } from "react";
 
 import { useAuth } from "@/providers/AuthProvider";
 
-import { UUID } from "crypto";
-
 import { api } from "@/lib/api";
 
-export type MonthlyIncome = {
-    id: UUID;
-    name: string;
-    amount: number;
-}
-
-function useMonthlyIncome() {
+function useMonthlyExpense() {
     const { user, authLoading } = useAuth();
 
-    const [monthlyIncome, setMonthlyIncome] = useState<MonthlyIncome[]>([]);
+    const [totalMonthlyExpense, setTotalMonthlyExpense] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
@@ -25,9 +17,9 @@ function useMonthlyIncome() {
             }
             
             try {
-                const fetchIncome = await api.get(`/api/monthlyIncome/get/${user?.id}`);
+                const fetchIncome = await api.get(`/api/monthlyExpense/total/get/${user?.id}`);
     
-                setMonthlyIncome(fetchIncome.data.data);
+                setTotalMonthlyExpense(fetchIncome.data.data.total_expense);
             } catch (error) { 
                 console.error("Error in fetching monthly income!", error);
             } finally {
@@ -38,7 +30,7 @@ function useMonthlyIncome() {
         getMonthlyIncome();
     }, [user?.id, authLoading]);
 
-    return { monthlyIncome, setMonthlyIncome, loading }
+    return { totalMonthlyExpense, setTotalMonthlyExpense, loading }
 }
 
-export default useMonthlyIncome;
+export default useMonthlyExpense;

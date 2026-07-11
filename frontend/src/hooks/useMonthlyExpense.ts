@@ -10,14 +10,14 @@ export type MonthlyExpense = {
     amount: number;
 }
 
-function useMonthlyIncome() {
+function useMonthlyExpense() {
     const { user, authLoading } = useAuth();
 
     const [monthlyExpense, setMonthlyExpense] = useState<MonthlyExpense[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
 
     useEffect(() => {
-        const getMonthlyIncome = async () => {
+        const getMonthlyExpense = async () => {
             if(!user?.id) {
                 return;
             }
@@ -33,10 +33,10 @@ function useMonthlyIncome() {
             }
         }
 
-        getMonthlyIncome();
+        getMonthlyExpense();
     }, [user?.id, authLoading]);
 
     return { monthlyExpense, setMonthlyExpense, loading }
 }
 
-export default useMonthlyIncome;
+export default useMonthlyExpense;

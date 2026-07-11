@@ -15,15 +15,68 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 
+import { useAuth } from "@/providers/AuthProvider";
+
 function FooterBar() {
+    const { logout } = useAuth();
     const pathname = usePathname();
     
+    const [isProfilePopupOpen, setIsProfilePopupOpen] = useState<boolean>(false);
+
     const isViewed = (path: string) => pathname == path ? "font-bold" : "";
     
     const path = (navigationPath: string) => `/private/${navigationPath}`;
     
     return(
         <>
+            { isProfilePopupOpen &&
+                <div className="fixed -translate-x-1/2 -translate-y-1/2 z-40 w-fit border border-[#9F7D38] bg-[#C39F4A] shadow-xl rounded-lg px-2.5 py-2 lg:bottom-[5%] lg:left-[10%]">
+                    <div className="flex flex-col w-full mr-6">
+                        <Link
+                            onClick={logout}
+                            href={"/login"}
+                            className="flex items-center hover:bg-[#b38f3d] text-white text-xs cursor-pointer font-semibold w-full gap-x-2 md:text-sm lg:text-base lg:rounded-lg lg:py-2 lg:px-2"
+                        >
+                            <Image
+                                src={Logout}
+                                alt="Log Out"
+                                className="h-auto md:w-[25px]"
+                                width={20}
+                                height={20}
+                            />
+                            Log Out
+                        </Link>
+                        <Link
+                            href={"/private/profile/edit"}
+                            className=" flex items-center hover:bg-[#b38f3d] text-white text-xs cursor-pointer font-semibold w-full gap-x-2 md:text-sm lg:text-base lg:rounded-lg lg:py-2 lg:px-2"
+                            aria-disabled
+                        >
+                            <Image
+                                src={EditProfile}
+                                alt="Edit Profile"
+                                className="h-auto md:w-[25px]"
+                                width={20}
+                                height={20}
+                            />
+                            Edit Profile
+                        </Link>
+                        <Link
+                            href={"/private/profile/delete"}
+                            className="flex items-center hover:bg-[#b38f3d] text-white text-xs font-semibold w-full gap-x-2 md:text-sm lg:text-base lg:rounded-lg lg:py-2 lg:px-2"
+                        >
+                            <Image
+                                src={DeleteProfile}
+                                alt="Delete Profile"
+                                className="h-auto md:w-[25px]"
+                                width={20}
+                                height={20}
+                            />
+                            Delete Profile
+                        </Link>
+                    </div>
+                </div>
+            }
+
             <nav className="bg-[#C39F4A] border-t-2 border-white fixed bottom-0 flex justify-around items-center w-full z-20 md:hidden">
                 <div className="mx-0.5 my-2">
                     <ul className="p-0.5 flex justify-center gap-x-5">
@@ -75,8 +128,8 @@ function FooterBar() {
                             />
                             LEDGER
                         </Link>
-                        <Link 
-                            href={path("profile")}
+                        <div 
+                            onClick={() => setIsProfilePopupOpen(!isProfilePopupOpen)}
                             className={`menu-item-mobile flex flex-col justify-center items-center gap-y-1.5 ${isViewed(path("profile"))}`}
                         >
                             <Image 
@@ -86,7 +139,7 @@ function FooterBar() {
                                 height={23}
                             />
                             PROFILE
-                        </Link>
+                        </div>
                     </ul>
                 </div>            
             </nav>
