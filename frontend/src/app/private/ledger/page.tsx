@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import useTransaction from "@/hooks/useTransaction";
 
-import { useRupiahFormat } from "@/utils/currencyFormat";
+import { rupiahFormat } from "@/utils/currencyFormat";
 
 function Ledger() {
     const [range, setRange] = useState<string>("all")
@@ -49,12 +49,12 @@ function Ledger() {
                                         <td>{new Date(transaction.recorded_date).toLocaleTimeString()}</td>
                                         <td>{transaction.transaction_name}</td>
                                         <td>{transaction.category}</td>
-                                        <td className={`${transaction.transaction_name === 'Expense' ? 'text-red-600' : 'text-green-600'}`}>{useRupiahFormat(transaction.amount)}</td>
+                                        <td className={`${transaction.transaction_name === 'Expense' ? 'text-red-600' : 'text-green-600'}`}>{rupiahFormat(transaction.amount)}</td>
                                     </tr>
                                 ))}
                                 <tr className="*:text-xs *:pt-3 sm:*:text-base">
                                     <td colSpan={4} className="font-semibold text-center border-t border-black">Total Amount</td>
-                                    <td className="font-semibold text-center border-t border-black">{useRupiahFormat(transactions.reduce((acc, transaction) => acc + transaction.amount, 0))}</td>
+                                    <td className="font-semibold text-center border-t border-black">{rupiahFormat(transactions.reduce((acc, transaction) => acc + transaction.amount, 0))}</td>
                                 </tr>
                         </tbody>
                     </table>

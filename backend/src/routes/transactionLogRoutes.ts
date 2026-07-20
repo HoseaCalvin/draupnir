@@ -1,9 +1,8 @@
 import express, { Router } from "express";
-import { insertTransactionLog, getTransactionLog, getAllTransactionLog } from "../controllers/transactionLogController";
+import { getTransactionLog, getAllTransactionLog } from "../controllers/transactionLogController";
 
 const transactionLogRouter: Router = express.Router();
 
-transactionLogRouter.post("/insert", insertTransactionLog);
 transactionLogRouter.get("/all/get/:user_id", getAllTransactionLog);
 transactionLogRouter.get("/get/:user_id", getTransactionLog);
 

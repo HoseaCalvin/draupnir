@@ -5,7 +5,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/app.js",
-    "dev": "tsx watch --inspect src/app.ts",
+    "dev": "tsx watch src/app.ts",
     "scheduler": "tsx watch src/queues/scheduler.ts",
     "worker": "tsx watch src/queues/worker.ts",
     "test": "echo \"Error: no test specified\" && exit 1"

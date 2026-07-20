@@ -26,7 +26,7 @@ export const insertGoal = async (req: Request, res: Response) => {
             return failedMessage(res, "Failed to insert a goal!");
         }
 
-        successMessage(res, insertGoal);
+        successMessage(res, insertGoal[0]);
     } catch (error) {
         serverErrorMessage(res);    
     }
@@ -45,7 +45,7 @@ export const getGoalById = async (req: Request, res: Response) => {
                 id = ${id}
         `
 
-        successMessage(res, getGoal);
+        successMessage(res, getGoal[0]);
     } catch (error) {
         serverErrorMessage(res);
     }
@@ -123,7 +123,7 @@ export const deleteGoal = async (req: Request, res: Response) => {
             return notFoundMesage(res, "User or Goal not found!");
         }
 
-        successMessage(res, deleteGoal);
+        successMessage(res, deleteGoal[0]);
     } catch (error) {
         serverErrorMessage(res);
     }

@@ -1,44 +1,48 @@
 "use client"
 
+import Target from "@/assets/goals/target.svg";
+import Deadline from "@/assets/goals/deadline.svg";
+
 import { useState, useEffect, useRef, SetStateAction } from "react";
+import Image from "next/image";
 
 import { OptionsIcon, AddNoteIcon } from "@/components/SVGIcons";
-import Popup from "@/components/Popup";
+import ConfirmationPopup from "@/components/ConfirmationPopup";
+import GoalPopup from "@/components/GoalPopup";
 
 import type { Goal } from "@/hooks/useGoal";
 
 import { useAuth } from "@/providers/AuthProvider";
+
 import useGoal from "@/hooks/useGoal";
+
 import { useFinance } from "@/providers/FinanceProvider";
 
-import { CircularProgress, LinearProgress } from "@mui/material";
-import { toast } from "react-toastify";
-import { NumericFormat } from "react-number-format";
-import DatePicker from "react-datepicker";
+import { CircularProgress } from "@mui/material";
 
-import { useRupiahFormat } from "@/utils/currencyFormat";
+import { toast } from "react-toastify";
+
+import { rupiahFormat } from "@/utils/currencyFormat";
 import { UUID } from "crypto";
 import { api } from "@/lib/api";
 
 import "react-datepicker/dist/react-datepicker.css";
 
-type GoalCardType = {
-    setOpenGoalCard: React.Dispatch<SetStateAction<boolean>>;
-}
-
-type EditGoalCardType = {
-    goalCollection: Goal;
-    setOpenEditGoalCard: React.Dispatch<SetStateAction<Goal | null>>;    
-}
-
 function Goals() {
+    const { user } = useAuth();
     const { currentBalance } = useFinance();
-    const { goals } = useGoal();
+    const { goals, setGoals } = useGoal();
 
+    const [name, setName] = useState<string>('');
+    const [targetAmount, setTargetAmount] = useState<number>(0);
+    const [deadline, setDeadline] = useState<Date | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+    const [isCreateGoalCardOpen, setIsCreateGoalCardOpen] = useState<boolean>(false);
+    const [isEditGoalCardOpen, setIsEditGoalCardOpen] = useState<Goal | null>(null);
+    const [isDeleteGoalCardOpen, setIsDeleteGoalCardOpen] = useState<Goal | null>(null);
+    
     const [openOptions, setOpenOptions] = useState<number | null>(null);
-    const [openGoalCard, setOpenGoalCard] = useState<boolean>(false);
-    const [openEditGoalCard, setOpenEditGoalCard] = useState<Goal | null>(null);
-    const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
 
     const optionRef = useRef<HTMLDivElement | null>(null);
 
@@ -58,11 +62,126 @@ function Goals() {
         }
     }, [openOptions]);
 
+    useEffect(() => {
+        const fetchGoal = async () => {
+            if(isEditGoalCardOpen === null) {
+                return;
+            }
+
+            try {
+                const fetchedGoal = await api.get(`/api/goals/get/${isEditGoalCardOpen?.id}`);
+    
+                setName(fetchedGoal.data.data.name);
+                setTargetAmount(fetchedGoal.data.data.target_balance);
+                setDeadline(new Date(fetchedGoal.data.data.deadline));
+            } catch (error) {
+                console.error("Error in fetching a Goal (Edit)!", error);
+                toast.error("Error in fetching your Goal!");
+            }
+        }
+
+        fetchGoal();
+    }, [isEditGoalCardOpen]);        
+
+    const insertGoal = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        if(name.length <= 0) {
+            toast.error("Goal name must not be empty!");
+            return;
+        }
+
+        if(targetAmount <= 0) {
+            toast.error("Balance must not be less than or equal to 0!");
+            return;
+        }
+
+        if(deadline && deadline.getTime() < Date.now()) {
+            toast.error("Deadline must always be later than the current date!");
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        try {
+            const insertedGoal = await api.post(`/api/goals/insert`, {
+                user_id: user?.id,
+                name: name,
+                target_balance: targetAmount,
+                deadline: deadline
+            });
+
+            if(insertedGoal.status === 201 || insertedGoal.status === 200) {
+                const goal = insertedGoal.data.data;
+
+                setGoals(prev => [goal, ...prev]);
+
+                setName('');
+                setTargetAmount(0);
+                setDeadline(null);
+                setIsCreateGoalCardOpen(false);
+
+                toast.success("Successfully created a goal!");
+            }
+        } catch (error) {
+            console.error("Error in creating a goal!", error);
+            toast.error("Error in creating a goal!");
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
+    const editGoal = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        if(name.length <= 0) {
+            toast.error("Goal name must not be empty!");
+            return;
+        }
+
+        if(targetAmount <= 0) {
+            toast.error("Balance must not be less than or equal to 0!");
+            return;
+        }
+
+        if(deadline && deadline?.getTime() < Date.now()) {
+            toast.error("Deadline must always be later than the current date!");
+            return;
+        }
+
+        try {
+            const edit = await api.patch(`/api/goals/update`, {
+                id: isEditGoalCardOpen?.id,
+                user_id: user?.id,
+                name: name,
+                target_balance: targetAmount,
+                deadline: deadline
+            });
+
+            if(edit.status === 201 || edit.status === 200) {
+                setName('');
+                setTargetAmount(0);
+                setIsEditGoalCardOpen(null);
+
+                toast.success("Successfully edited a goal!");
+            }
+        } catch (error) {
+            console.error("Error in updating a Goal!", error);
+            toast.error("Error in updating your Goal!");
+        }
+    }
+
     const deleteGoal = async (id: UUID) => {
         try {
-            await api.delete(`/api/goals/delete/${id}`);
+            const deletedGoal = await api.delete(`/api/goals/delete/${id}`);
 
-            toast.success("Successfully deleted a goal!");
+            if(deletedGoal.status === 200 || deletedGoal.status === 201) {
+                const goal = deletedGoal.data.data;
+
+                setGoals(prev => prev.filter(goals => goals.id !== goal.id));
+
+                toast.success("Successfully deleted a goal!");
+            }
         } catch (error) {
             console.error("Error in deleting a goal!", error);
             toast.error("Error in deleting a goal!");
@@ -71,30 +190,54 @@ function Goals() {
 
     return(
         <>
-            { openGoalCard &&
-                <CreateGoalCard
-                    setOpenGoalCard={setOpenGoalCard}
+            { isCreateGoalCardOpen &&
+                <GoalPopup
+                    title={"Create a Goal"}
+                    buttonText={"Create"}
+                    name={name}
+                    targetAmount={targetAmount}
+                    deadline={deadline}
+                    setName={setName}
+                    setTargetAmount={setTargetAmount}
+                    setDeadline={setDeadline}
+                    setIsGoalCardOpen={() => setIsCreateGoalCardOpen(false)}
+                    handleSubmit={insertGoal}
+                    isSubmitting={isSubmitting}
                 />
             }
 
-            { openEditGoalCard &&
-                <EditGoalCard
-                    goalCollection={openEditGoalCard}
-                    setOpenEditGoalCard={setOpenEditGoalCard}
+            { isEditGoalCardOpen &&
+                <GoalPopup
+                    title={"Edit a Goal"}
+                    buttonText={"Edit"}
+                    name={name}
+                    targetAmount={targetAmount}
+                    deadline={deadline}
+                    setName={setName}
+                    setTargetAmount={setTargetAmount}
+                    setDeadline={setDeadline}
+                    setIsGoalCardOpen={() => {
+                        setName('');
+                        setTargetAmount(0);
+                        setDeadline(null);
+                        setIsEditGoalCardOpen(null);
+                    }}
+                    handleSubmit={editGoal}
+                    isSubmitting={isSubmitting}
                 />
             }
 
-            { goalToDelete &&
-                <Popup
+            { isDeleteGoalCardOpen &&
+                <ConfirmationPopup
                     title="Delete Goal"
-                    text={`You are about to delete "${goalToDelete.name}" goal. Are you certain you want to do it? This will permanently delete the goal and cannot be restored!`}
-                    onConfirm={() => deleteGoal(goalToDelete.id)}
-                    onClose={() => setGoalToDelete(null)}
+                    text={`You are about to delete "${isDeleteGoalCardOpen.name}" goal. Are you certain you want to do it? This will permanently delete the goal and cannot be restored!`}
+                    onConfirm={() => deleteGoal(isDeleteGoalCardOpen.id)}
+                    onClose={() => setIsDeleteGoalCardOpen(null)}
                 />
             }
 
             <main className="flex flex-col frame-padding gap-y-7 lg:pb-0 lg:grid lg:grid-cols-2 lg:auto-rows-auto lg:gap-8">
-                <div className="main-button fixed bottom-20 right-3 flex justify-center items-center cursor-pointer rounded-lg z-20 space-x-1.5 py-1.5 px-3 md:bottom-7 md:right-8 lg:space-x-2 lg:px-5" onClick={() => setOpenGoalCard(true)}>
+                <div className="main-button fixed -translate-1/2 bottom-15 -right-5 flex justify-center items-center cursor-pointer rounded-lg z-20 space-x-1.5 py-1.5 px-3 md:bottom-2 md:right-0 lg:space-x-2 lg:px-5" onClick={() => setIsCreateGoalCardOpen(true)}>
                     <AddNoteIcon
                         className="text-white w-full h-fit max-w-[30px] lg:max-w-[40px]"
                     />
@@ -102,51 +245,58 @@ function Goals() {
                 </div>
                     { goals && goals?.length > 0 ? (
                             goals?.map((goal, index) => (
-                                <section key={index} className="relative bg-[#FFFDF0] rounded-2xl row-start-auto py-4 px-6 shadow-lg lg:py-6">
+                                <section key={index} className="relative bg-[#FFFDF0] rounded-2xl row-start-auto py-4 px-5 shadow-lg lg:py-6">
                                     <div className="flex justify-between items-center">
-                                        <h1 className="px-1 text-sm font-bold text-[#7F7414] lg:text-lg">Goal {index + 1}</h1>
+                                        <h1 className="px-1 text-sm font-bold text-[#7F7414] lg:text-lg">Goal #{index + 1}</h1>
                                         <OptionsIcon 
-                                            onClick={() => setOpenOptions((goalIdx) => index == goalIdx ? null : index)} 
+                                            aria-label="Options"
+                                            onClick={() => setOpenOptions((goalIdx) => index === goalIdx ? null : index)} 
                                             className="h-auto w-[25px] cursor-pointer p-1 rounded-lg hover:bg-[#F3F1E0] lg:w-[30px]"
                                         />
                                         { openOptions === index &&
                                             <div ref={optionRef} className="absolute border border-gray-300 -translate-y-1/2 -translate-x-1/2 top-22 -right-8 bg-[#FFFDF0] shadow-lg rounded-lg p-2 z-10 lg:top-25">
-                                                <p className="hover:bg-[#F3F1E0] py-1 px-1.5 rounded-md cursor-pointer lg:px-3" onClick={() => setOpenEditGoalCard(goal)}>Update</p>
-                                                <p className="hover:bg-[#F3F1E0] py-1 px-1.5 rounded-md cursor-pointer lg:px-3" onClick={() => setGoalToDelete(goal)}>Delete</p>
+                                                <p className="hover:bg-[#F3F1E0] py-1 px-1.5 rounded-md cursor-pointer lg:px-3" onClick={() => setIsEditGoalCardOpen(goal)}>Update</p>
+                                                <p className="hover:bg-[#F3F1E0] py-1 px-1.5 rounded-md cursor-pointer lg:px-3" onClick={() => setIsDeleteGoalCardOpen(goal)}>Delete</p>
                                             </div>
                                         }
                                     </div>
                                     <hr className="my-2 border-gray-400"/>
                                     <div>
                                         <h1 className="py-1.5 font-bold text-center w-full text-lg lg:text-xl xl:text-2xl">{goal.name}</h1>
-                                        <div className="hidden justify-center items-center h-full text-[#C39F4A] py-8 lg:flex">
+                                        <div className="justify-center items-center h-full w-full text-[#C39F4A] py-5 flex md:py-8">
                                             <CircularProgress
                                                 enableTrackSlot
-                                                size={"14rem"}
-                                                variant="determinate"
-                                                value={Math.min(100, Math.round((currentBalance / goal.target_balance) * 100))}
-                                                color="inherit"
-                                            />
-                                        </div>
-                                        <div className=" text-[#C39F4A] pt-4 pb-6 lg:hidden">
-                                            <LinearProgress
-                                                variant="determinate"
-                                                value={Math.min(100, Math.round((currentBalance / goal.target_balance) * 100))}
-                                                color="inherit"
-                                                style={{ 
-                                                    height: 12, 
-                                                    borderRadius: 8 
+                                                sx={{
+                                                    width: { xs: "10rem !important", md: "12rem !important", lg: "15rem !important" },
+                                                    height: { xs: "10rem !important", md: "12rem !important", lg: "15rem !important" },
                                                 }}
+                                                variant="determinate"
+                                                value={Math.min(100, Math.round((currentBalance / goal.target_balance) * 100))}
+                                                color="inherit"
                                             />
                                         </div>
-                                        <div className="flex flex-col justify-between gap-x-4 gap-y-4 w-full xl:flex-row">
-                                            <div className="bg-[#FFFDF0] border-2 border-gray-300 shadow-sm rounded-lg w-full py-2 lg:p-2.5">
-                                                <h3 className="font-semibold text-center text-sm">Target</h3>
-                                                <p className="font-semibold text-center text-base lg:text-xl">{useRupiahFormat(goal.target_balance)}</p>
+                                        <div className="flex flex-col justify-between gap-x-4 gap-y-4 w-full">
+                                            <div className="flex items-center justify-between border-2 border-[#f5e9a5] shadow-sm rounded-lg w-full py-2.5 px-2.5 lg:px-3 lg:py-3">
+                                                <figure className="flex items-center gap-x-1.5 md:gap-x-2.5">
+                                                    <Image
+                                                        src={Target}
+                                                        alt="Target Icon"
+                                                        className="h-auto w-[20px] lg:w-[25px]"
+                                                    />
+                                                    <h3 className="font-semibold text-center text-sm lg:text-lg">Target</h3>
+                                                </figure>
+                                                <p className="font-semibold text-center text-sm md:text-base lg:text-lg">{rupiahFormat(goal.target_balance)}</p>
                                             </div>
-                                            <div className="bg-[#FFFDF0] border-2 border-gray-300 shadow-sm rounded-lg w-full py-2 lg:p-2.5">
-                                                <h3 className="font-semibold text-center text-sm">Deadline</h3>
-                                                <p className="font-semibold text-center text-base lg:text-xl">{new Date(goal.deadline).toLocaleDateString()}</p>
+                                            <div className="flex items-center justify-between border-2 border-[#f5e9a5] shadow-sm rounded-lg w-full py-2.5 px-2.5 lg:px-3 lg:py-3">
+                                                <figure className="flex items-center gap-x-1.5 md:gap-x-2.5">
+                                                    <Image
+                                                        src={Deadline}
+                                                        alt="Target Icon"
+                                                        className="h-auto w-[20px] lg:w-[25px]"
+                                                    />
+                                                    <h3 className="font-semibold text-center text-sm lg:text-lg">Deadline</h3>
+                                                </figure>
+                                                <p className="font-semibold text-center text-sm md:text-base lg:text-lg">{new Date(goal.deadline).toLocaleDateString()}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -160,206 +310,6 @@ function Goals() {
                     }
             </main>
         </>
-    )
-}
-
-function CreateGoalCard({ setOpenGoalCard }: GoalCardType) {
-    const { user } = useAuth();
-
-    const [name, setName] = useState<string>('');
-    const [targetBalance, setTargetBalance] = useState<number>(0);
-    const [deadline, setDeadline] = useState<Date | null>(null);
-
-    const submitForm = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
-        if(name.length <= 0) {
-            toast.error("Goal name must not be empty!");
-            return;
-        }
-
-        if(targetBalance <= 0) {
-            toast.error("Balance must not be less than or equal to 0!");
-            return;
-        }
-
-        if(deadline && deadline.getTime() < Date.now()) {
-            toast.error("Deadline must always be later than the current date!");
-            return;
-        }
-
-        try {
-            const send = await api.post(`/api/goals/insert`, {
-                user_id: user?.id,
-                name: name,
-                target_balance: targetBalance,
-                deadline: deadline
-            });
-
-            if(send.status === 201 || send.status === 200) {
-                setName('');
-                setTargetBalance(0);
-                setOpenGoalCard(false);
-
-                toast.success("Successfully created a goal!");
-            }
-        } catch (error) {
-            console.error("Error in creating a goal!", error);
-            toast.error("Error in creating a goal!");
-        }
-    }
-
-    return(
-        <div className="fixed flex justify-center items-center h-screen w-screen z-30 bg-gray-500/30">
-            <div className="bg-[#FFF8CD] gap-y-6 w-[600px] h-fit rounded-2xl m-8 py-3 px-5">
-                <header className="flex justify-between items-center w-full">
-                    <h1 className="font-bold text-sm md:text-base lg:text-lg">Create a Goal</h1>
-                    <p className="text-3xl cursor-pointer" onClick={() => setOpenGoalCard(false)}>&times;</p>
-                </header>
-                <hr />
-                <form onSubmit={submitForm} className=" space-y-3 py-4 lg:py-3">
-                    <div className="space-y-1">
-                        <p className="font-semibold text-xs py-0.5 md:text-sm">Goal Name</p>
-                        <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Goal Title" className="bg-white block border-2 rounded-lg py-1 px-2 w-full text-sm md:w-3/4 lg:text-base"/>
-                    </div>
-                    <div className="space-y-1">
-                        <p className="font-semibold text-xs py-0.5 md:text-sm">Target Balance</p>
-                        <NumericFormat
-                            value={targetBalance}
-                            thousandSeparator="."
-                            decimalSeparator=","
-                            prefix="Rp "
-                            allowNegative={false}
-                            placeholder="Target Balance"
-                            className="bg-white block border-2 rounded-lg py-1 px-2 w-full text-sm md:w-3/4 lg:text-base"
-                            onValueChange={(e) => setTargetBalance(Number(e.floatValue ?? 0))}
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <p className="font-semibold text-xs py-0.5 md:text-sm">Deadline</p>
-                        <DatePicker
-                            selected={deadline}
-                            onChange={setDeadline}
-                            fixedHeight
-                            calendarClassName="custom-calendar"
-                            className="bg-white border-2 rounded-lg cursor-pointer py-1 px-2 w-full text-sm md:w-3/4 lg:text-base"
-                        />
-                    </div>
-                    <div className="pt-2.5 gap-x-3">
-                        <button type="submit" className="main-button px-5 py-1.5 text-sm md:text-base">Create</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    );
-}
-
-function EditGoalCard({ goalCollection, setOpenEditGoalCard }: EditGoalCardType) {
-    const { user } = useAuth();
-
-    const [name, setName] = useState<string>("");
-    const [balance, setBalance] = useState<number>(0);
-    const [deadline, setDeadline] = useState<Date | null>(null);
-
-    useEffect(() => {
-        const fetchGoal = async () => {
-            try {
-                const response = await api.get(`/api/goals/get/${goalCollection.id}`);
-    
-                setName(response.data.data[0].name);
-                setBalance(response.data.data[0].target_balance);
-                setDeadline(new Date(response.data.data[0].deadline));
-            } catch (error) {
-                console.error("Error in fetching a Goal (Edit)!", error);
-                toast.error("Error in fetching your Goal!");
-            }
-        }
-
-        fetchGoal();
-    }, []);
-
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
-        if(name.length <= 0) {
-            toast.error("Goal name must not be empty!");
-            return;
-        }
-
-        if(balance <= 0) {
-            toast.error("Balance must not be less than or equal to 0!");
-            return;
-        }
-
-        if(deadline && deadline?.getTime() < Date.now()) {
-            toast.error("Deadline must always be later than the current date!");
-            return;
-        }
-
-        try {
-            const edit = await api.patch(`/api/goals/update`, {
-                id: goalCollection.id,
-                user_id: user?.id,
-                name: name,
-                target_balance: balance,
-                deadline: deadline
-            });
-
-            if(edit.status === 201 || edit.status === 200) {
-                setName('');
-                setBalance(0);
-                setOpenEditGoalCard(null);
-
-                toast.success("Successfully edited a goal!");
-            }
-        } catch (error) {
-            console.error("Error in updating a Goal!", error);
-            toast.error("Error in updating your Goal!");
-        }
-    }
-
-    return(
-        <main className="fixed flex justify-center items-center h-screen w-screen z-30 bg-gray-500/30">
-            <form onSubmit={handleSubmit} className="bg-[#FFF8CD] gap-y-6 w-[600px] h-fit rounded-2xl m-8 py-3 px-5">
-                <header className="flex justify-between items-center w-full">
-                    <h1 className="font-bold text-sm md:text-base lg:text-lg">Edit Goal</h1>
-                    <p className="text-3xl cursor-pointer" onClick={() => setOpenEditGoalCard(null)}>&times;</p>
-                </header>
-                <hr />
-                <div className="relative space-y-3 py-4 lg:py-3">
-                    <div className="space-y-1">
-                        <p className="font-semibold text-xs py-0.5 md:text-sm">Goal Name</p>
-                        <input type="text" placeholder="e.g. Buy groceries" value={name} onChange={(e) => setName(e.target.value)} className="bg-white block border-2 rounded-lg py-1 px-2 w-full text-sm md:w-3/4 lg:text-base"/>
-                    </div>
-                    <div className="space-y-1">
-                        <p className="font-semibold text-xs py-0.5 md:text-sm">Target Balance</p>
-                        <NumericFormat
-                            value={balance}
-                            thousandSeparator="."
-                            decimalSeparator=","
-                            prefix="Rp "
-                            allowNegative={false}
-                            placeholder="Input valid amount"
-                            className="bg-white block border-2 rounded-lg py-1 px-2 w-full text-sm md:w-3/4 lg:text-base"
-                            onValueChange={(e) => setBalance(Number(e.floatValue ?? 0))}
-                        />
-                    </div>
-                    <div className="space-y-1">
-                        <p className="font-semibold text-xs py-0.5 md:text-sm">Deadline</p>
-                        <DatePicker
-                            selected={deadline}
-                            onChange={setDeadline}
-                            fixedHeight
-                            calendarClassName="custom-calendar"
-                            className="bg-white border-2 rounded-lg cursor-pointer py-1 px-2  w-full text-sm md:w-3/4 lg:text-base"
-                        />
-                    </div>
-                    <div className="flex gap-x-2.5 pt-2">
-                        <button type="submit" className="main-button px-5 py-1.5 text-sm md:text-base">Submit</button>
-                    </div>
-                </div>
-            </form>
-        </main>
     )
 }
 

@@ -1,13 +1,13 @@
 "use client"
 
-interface PopupInterface {
+interface ConfirmationPopupProps {
     title: string;
     text: string;
     onConfirm: () => void;
     onClose: () => void;
 }
 
-function Popup({ title, text, onConfirm, onClose }: PopupInterface) {
+function ConfirmationPopup({ title, text, onConfirm, onClose }: ConfirmationPopupProps) {
     const handleConfirm = () => {
         onConfirm();
         onClose();
@@ -17,7 +17,7 @@ function Popup({ title, text, onConfirm, onClose }: PopupInterface) {
         <div className="bg-gray-400/50 fixed top-0 left-0 z-50 flex justify-center items-center w-full h-screen">
             <div className="bg-[#FFFDF0] mx-6 py-3 pb-5 px-5 rounded-2xl w-full max-w-[700px] md:pb-4">
                 <header className="flex justify-between items-center w-full">
-                    <h1 className="font-bold text-base lg:text-lg">{title}</h1>
+                    <h1 className="text-[#7F7414] font-bold text-base lg:text-lg">{title}</h1>
                     <p className="text-3xl cursor-pointer" onClick={onClose}>&times;</p>
                 </header>
                 <hr />
@@ -33,4 +33,4 @@ function Popup({ title, text, onConfirm, onClose }: PopupInterface) {
     )
 }
 
-export default Popup;
+export default ConfirmationPopup;

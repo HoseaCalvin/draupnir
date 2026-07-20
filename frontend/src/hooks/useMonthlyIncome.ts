@@ -6,13 +6,13 @@ import { UUID } from "crypto";
 
 import { api } from "@/lib/api";
 
-export type MonthlyIncome = {
+type MonthlyIncome = {
     id: UUID;
     name: string;
     amount: number;
 }
 
-function useMonthlyIncome() {
+function useFetchMonthlyIncome() {
     const { user, authLoading } = useAuth();
 
     const [monthlyIncome, setMonthlyIncome] = useState<MonthlyIncome[]>([]);
@@ -41,4 +41,4 @@ function useMonthlyIncome() {
     return { monthlyIncome, setMonthlyIncome, loading }
 }
 
-export default useMonthlyIncome;
+export default useFetchMonthlyIncome;

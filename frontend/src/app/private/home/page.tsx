@@ -3,16 +3,18 @@
 import { useEffect, useState } from "react";
 import { ResponsiveBar } from "@nivo/bar";
 
-import StashCard from "@/components/StashCard";
-import InfoCard from "@/components/InfoCard";
-import FinancialAnalysis from "@/components/FinancialAnalysis";
+import StashCardProps from "@/components/StashCard";
+import InfoCardProps from "@/components/InfoCard";
 
-import { WalletIcon, ExpenseIcon, CashflowIcon } from "@/components/SVGIcons";
+import { WalletIcon, ExpenseIcon } from "@/components/SVGIcons";
+
+import { X } from "lucide-react";
 
 import { useFinance } from "@/providers/FinanceProvider";
 import { useAuth } from "@/providers/AuthProvider";
 
 import { toast } from "react-toastify";
+import Markdown from "react-markdown";
 
 import { api } from "@/lib/api";
 
@@ -27,6 +29,11 @@ interface AiSummary {
     ai_summary: string;
     recorded_date: Date;
     report_period: Date;
+}
+
+interface FinancialAnalysisProps {
+    isPopupOpen: boolean;
+    setIsPopupOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 function Home() {
@@ -106,7 +113,7 @@ function Home() {
     return(
         <>
             { openAiAnalysis &&
-                <FinancialAnalysis
+                <FinancialAnalysisPopup
                     isPopupOpen={openAiAnalysis}
                     setIsPopupOpen={setOpenAiAnalysis}
                 />
@@ -120,13 +127,13 @@ function Home() {
                         </div>
                         <hr/>
                         <div className="overflow-x-auto flex justify-start items-center h-full py-7 xl:p-7 sm:justify-center md:justify-start">
-                            <StashCard
+                            <StashCardProps
                                 border="#6BBF59" 
                                 title="Current Balance"
                                 icon={<WalletIcon/>}
                                 value={currentBalance}
                             />
-                            <StashCard
+                            <StashCardProps
                                 border="#C94C4C" 
                                 title="This Month's Expense"
                                 icon={<ExpenseIcon/>}
@@ -139,7 +146,7 @@ function Home() {
                     <div className="mx-5 h-full flex flex-col">
                         <div className="flex pt-3 pb-2 lg:py-4">
                             <h1 className="title-card">Mimir's Insight</h1>
-                            <InfoCard 
+                            <InfoCardProps 
                                 text="Mimir's Insight reports your overall monthly spending."
                             />
                         </div>
@@ -170,7 +177,7 @@ function Home() {
                     <div className="mx-5 h-full flex flex-col">
                         <div className="flex pt-3 pb-2 lg:py-4">
                             <h1 className="title-card">Financial History {new Date().getFullYear()}</h1>
-                            <InfoCard 
+                            <InfoCardProps 
                                 text="Amount is displayed in Million (Rupiah)."
                             />
                         </div>
@@ -207,5 +214,52 @@ function Home() {
         </>
     )
 }
+
+function FinancialAnalysisPopup({ isPopupOpen, setIsPopupOpen }: FinancialAnalysisProps) {
+    const { user } = useAuth();
+
+    const [aiResponse, setAiResponse] = useState<string>();
+
+    useEffect(() => {
+        const fetchAnalysis = async () => {
+            try {
+                const fetch = await api.get(`/api/ai/analysis/get/${user?.id}`)
+            
+                setAiResponse(fetch.data.data[0].ai_detailed_text);
+            } catch (error) {
+                console.error("Error in fetching detailed analysis!", error);
+            }
+        }
+
+        fetchAnalysis();
+    }, [aiResponse]);
+
+    return(
+        <div className="fixed flex justify-center items-center h-screen w-screen z-30 bg-gray-500/30">
+            <div className={`bg-[#FFF8CD] relative border-2 border-[#C39F4A] flex flex-col w-[85%] h-[80%] m-8 py-3 px-5 rounded-2xl shadow-xl md:py-4 md:px-7 lg:w-[900px] lg:h-[90%]`}>
+                <div className="w-full flex justify-between items-center">
+                    <h3 className="text-[#7F7414] font-bold text-sm py-1 md:text-base">Mimir's Insight</h3>
+                    <button 
+                        type="button"
+                        onClick={() => setIsPopupOpen(false)} 
+                        aria-label="Close"
+                        className="absolute top-2.5 right-2.5 cursor-pointer text-3xl rounded-full animate hover:bg-[#F2EBC2]"
+                    >
+                        <X
+                            className="h-8 w-8 p-1"
+                        />
+                    </button>
+                </div>  
+                <hr className="px-2.5"/>              
+                <div className="flex-1 overflow-y-auto space-y-3 py-4">
+                    <div className="rounded-2xl p-3 w-full text-sm lg:text-base">
+                        <Markdown>{aiResponse}</Markdown>
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}
+
 
 export default Home;

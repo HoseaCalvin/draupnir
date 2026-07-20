@@ -4,7 +4,7 @@ import { useAuth } from "@/providers/AuthProvider";
 
 import { api } from "@/lib/api";
 
-function useMonthlyIncome() {
+function useTotalMonthlyIncome() {
     const { user, authLoading } = useAuth();
 
     const [totalMonthlyIncome, setTotalMonthlyIncome] = useState<number>(0);
@@ -33,4 +33,4 @@ function useMonthlyIncome() {
     return { totalMonthlyIncome, setTotalMonthlyIncome, loading }
 }
 
-export default useMonthlyIncome;
+export default useTotalMonthlyIncome;

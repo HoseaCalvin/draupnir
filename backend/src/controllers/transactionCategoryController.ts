@@ -19,6 +19,6 @@ export const getCategories = async (req: Request, res: Response) => {
 
         successMessage(res, getCategories);
     } catch (error) {
-        serverErrorMessage(res);
+        serverErrorMessage(res, error);
     }
 }

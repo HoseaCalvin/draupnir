@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 
 import { useAuth } from "@/providers/AuthProvider";
+
 import { api } from "@/lib/api";
+
 import { UUID } from "crypto";
 
-export type MonthlyExpense = {
+type MonthlyExpense = {
     id: UUID;
     name: string;
     amount: number;

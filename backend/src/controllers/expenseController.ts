@@ -2,12 +2,13 @@ import { Request, Response } from "express";
 
 import { sql } from "../configs/database";
 import { failedMessage, notFoundMesage, serverErrorMessage, successMessage } from "../misc/messages";
+import { insertTransactionLog } from "./transactionLogController";
 
 export const getExpense = async (req: Request, res: Response) => {
     const { user_id } = req.params;
 
     try {
-        const getExpense = await sql`
+        const fetchedExpense = await sql`
             SELECT 
                 expense AS expense
             FROM
@@ -16,7 +17,7 @@ export const getExpense = async (req: Request, res: Response) => {
                 user_id = ${user_id}
         `
 
-        successMessage(res, getExpense[0]);
+        successMessage(res, fetchedExpense[0]);
     } catch (error) {
         serverErrorMessage(res);
     }
@@ -24,7 +25,7 @@ export const getExpense = async (req: Request, res: Response) => {
 
 export const updateExpense = async (req: Request, res: Response) => {
     const { user_id } = req.params;
-    const { expense } = req.body;
+    const { expense, category_id } = req.body;
 
     if(!user_id) {
         return failedMessage(res, "User ID is missing!");
@@ -34,24 +35,38 @@ export const updateExpense = async (req: Request, res: Response) => {
         return failedMessage(res, "Expense must have a value more than zero!");
     }
 
+    if(!category_id) {
+        return failedMessage(res, "Category ID is missing!");
+    }
+
     try {
-        const addExpense = await sql`
+        const updatedExpense = await sql`
             UPDATE finance
             SET
-                expense = (expense + ${expense})
+                expense = (expense + ${expense}),
+                balance = (balance - ${expense})
             WHERE
                 user_id = ${user_id}
             RETURNING
                 *
         `
 
-        if(addExpense.length === 0) {
-            return failedMessage(res, "User not found!");
+        if(updatedExpense.length === 0) {
+            return failedMessage(res, "User not found or query failed to execute!");
         }
 
-        successMessage(res, addExpense);
+        const insertedTransaction = await insertTransactionLog(user_id, new Date(), "Expense", expense, category_id);
+
+        if(insertedTransaction.length === 0) {
+            return failedMessage(res, "Query failed to execute!");
+        }
+
+        successMessage(res, {
+            expense: updatedExpense[0],
+            transaction: insertedTransaction[0]
+        });
     } catch (error) {
-        serverErrorMessage(res);
+        serverErrorMessage(res, error);
     }
 }
 
@@ -63,7 +78,7 @@ export const deleteExpense = async (req: Request, res: Response) => {
     }
     
     try {
-        const deleteExpense = await sql`
+        const deletedExpense = await sql`
             UPDATE finance
             SET
                 expense = 0
@@ -73,12 +88,12 @@ export const deleteExpense = async (req: Request, res: Response) => {
                 *
         `
 
-        if(deleteExpense.length === 0) {
+        if(deletedExpense.length === 0) {
             return notFoundMesage(res, "User not found!");
         }
 
-        successMessage(res, deleteExpense);
+        successMessage(res, deletedExpense);
     } catch (error) {
-        serverErrorMessage(res);        
+        serverErrorMessage(res, error);        
     }
 }

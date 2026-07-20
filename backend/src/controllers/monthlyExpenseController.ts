@@ -36,7 +36,7 @@ export const getMonthlyExpense = async (req: Request, res: Response) => {
     const { user_id } = req.params;
 
     if(!user_id) {
-        return failedMessage(res, "user_id is missing!");
+        return failedMessage(res, "User ID is missing!");
     }
 
     try {
@@ -127,7 +127,7 @@ export const reduceBalance = async (user_id: string) => {
     }
 
     try {
-        const reduceBalance = await sql`
+        const reducedBalance = await sql`
             UPDATE
                 finance
             SET
@@ -148,10 +148,17 @@ export const reduceBalance = async (user_id: string) => {
                         user_id = ${user_id}
                 )
             WHERE
-                user_id = ${user_id};
+                user_id = ${user_id}
+            RETURNING
+                *
+            ;
         `
 
-        return reduceBalance;
+        if(reducedBalance.length === 0) {
+            console.log("Failed to reduce balance!");
+        }
+
+        return reducedBalance;
     } catch (error) {
         console.error("Error in reducing balance!", error);
         return error;

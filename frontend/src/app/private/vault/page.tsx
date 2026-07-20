@@ -1,14 +1,13 @@
 "use client"
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { useRouter } from "next/navigation";
 
+import { useAuth } from "@/providers/AuthProvider";
 import { useFinance } from "@/providers/FinanceProvider";
 
-import InfoCard from "@/components/InfoCard";
-import ExpensePopup from "@/components/ExpensePopup";
-import CurrentBalancePopup from "@/components/CurrentBalancePopup";
+import TransactionPopup from "@/components/TransactionPopup";
 
 import { ResponsivePie } from '@nivo/pie';
 
@@ -16,18 +15,107 @@ import useTotalMonthlyIncome from "@/hooks/useTotalMonthlyIncome";
 import useTotalMonthlyExpense from "@/hooks/useTotalMonthlyExpense";
 import useTransaction from "@/hooks/useTransaction";
 
-import { useRupiahFormat } from "@/utils/currencyFormat";
+import { rupiahFormat } from "@/utils/currencyFormat";
+
+import { toast } from "react-toastify";
+
+import { api } from "@/lib/api";
 
 function TheVault() {
+    const { user } = useAuth();
     const { currentBalance, expense, setCurrentBalance, setExpense } = useFinance();
     const { totalMonthlyIncome } = useTotalMonthlyIncome();
     const { totalMonthlyExpense } = useTotalMonthlyExpense();
-    const { transactions, setTransactions, loading } = useTransaction("this_month");
+    const { transactions, loading, setTransactions } = useTransaction("this_month");
+    
+    const [isCurrentBalancePopupOpen, setIsCurrentBalancePopupOpen] = useState<boolean>(false);
+    const [isExpensePopupOpen, setIsExpensePopupOpen] = useState<boolean>(false);
 
-    const [currentBalancePopup, setCurrentBalancePopup] = useState<boolean>(false);
-    const [expensePopup, setExpensePopup] = useState<boolean>(false);
-
+    const [amount, setAmount] = useState<number>(0);
+    const [categoryId, setCategoryId] = useState<string>('');
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    
     const router = useRouter();
+
+    const MIN_AMOUNT = 10000
+
+    const handleCurrentBalanceSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        if(amount < MIN_AMOUNT) {
+            toast.error("Amount must be Rp10.000 or more!");
+            return;
+        }
+
+        if(isSubmitting) {
+            return
+        }
+
+        setIsSubmitting(true);
+        
+        try {
+            const updatedCurrentBalance = await api.patch(`/api/currentBalance/update/${user?.id}`, {
+                current_balance: amount,
+                category_id: categoryId
+            });
+
+            if(updatedCurrentBalance.status === 200 || updatedCurrentBalance.status === 201) {
+                const transaction = updatedCurrentBalance.data.data.transaction;
+
+                setCurrentBalance(prev => prev + amount);
+                setTransactions(prev => [transaction, ...prev])
+                setAmount(0);
+                setIsCurrentBalancePopupOpen(false);
+
+                toast.success(`Successfully added ${rupiahFormat(amount)} into balance!`);
+            }
+        } catch (error) {
+            console.error("Error in updating log or balance!", error);
+            toast.error("There is an error while updating your balance, try again!");            
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
+    const handleExpenseSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        if(amount < MIN_AMOUNT) {
+            toast.error("Amount must be Rp10.000 or more!");
+            return;
+        }
+
+        if(isSubmitting) {
+            return;
+        }
+
+        setIsSubmitting(true);
+        
+        try {
+            const updatedExpense = await api.patch(`/api/expense/update/${user?.id}`, {
+                expense: -amount,
+                category_id: categoryId
+            });
+
+            if(updatedExpense.status === 200 || updatedExpense.status === 201) {
+                const transaction = updatedExpense.data.data.transaction;
+
+                setExpense(prev => prev + amount);
+                setCurrentBalance(prev => prev - amount);
+                setTransactions(prev => [transaction, ...prev])
+                setAmount(0);
+                setCategoryId('')
+                setIsExpensePopupOpen(false);
+
+                toast.success(`Successfully added ${rupiahFormat(amount)} into expense!`)
+            }
+        } catch (error) {
+            console.error("Error in updating log or balance", error);
+            toast.error("There is an error while updating your log or balance, try again!");            
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
 
     if(loading) {
         <div>
@@ -37,20 +125,29 @@ function TheVault() {
     
     return(
         <>
-            { currentBalancePopup &&
-                <CurrentBalancePopup
-                    setIsPopupOpen={setCurrentBalancePopup}
-                    setCurrentBalance={setCurrentBalance}
-                    setTransactions={setTransactions}
+            { isCurrentBalancePopupOpen &&
+                <TransactionPopup
+                    title="Input Balance"
+                    balance={amount}
+                    categoryId={categoryId}
+                    setBalance={setAmount}
+                    setCategoryId={setCategoryId}
+                    setIsPopupOpen={setIsCurrentBalancePopupOpen}
+                    handleSubmit={handleCurrentBalanceSubmit}
+                    isSubmitting={isSubmitting}
                 />
             }
 
-            { expensePopup && 
-                <ExpensePopup
-                    setIsPopupOpen={setExpensePopup}
-                    setExpense={setExpense}
-                    setCurrentBalance={setCurrentBalance}
-                    setTransactions={setTransactions}
+            { isExpensePopupOpen && 
+                <TransactionPopup
+                    title="Input Expense"
+                    balance={amount}
+                    categoryId={categoryId}
+                    setBalance={setAmount}
+                    setCategoryId={setCategoryId}
+                    setIsPopupOpen={setIsExpensePopupOpen}
+                    handleSubmit={handleExpenseSubmit}
+                    isSubmitting={isSubmitting}
                 />
             }
 
@@ -62,8 +159,8 @@ function TheVault() {
                         </div>
                         <hr/>
                         <div className="flex flex-col justify-center items-center h-full mb-4 lg:mb-0 lg:space-y-3">
-                            <h2 className="p-4 text-xl text-center font-bold lg:text-4xl">{useRupiahFormat(currentBalance)}</h2>
-                            <button onClick={() => setCurrentBalancePopup(true)} className="font-bold text-white text-xs bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg px-10 py-2 cursor-pointer lg:text-base">Add</button>
+                            <h2 className="p-4 text-xl text-center font-bold lg:text-4xl">{rupiahFormat(currentBalance)}</h2>
+                            <button onClick={() => setIsCurrentBalancePopupOpen(true)} className="font-bold text-white text-xs bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg px-10 py-2 cursor-pointer lg:text-base">Add</button>
                         </div>
                     </div>
                 </section>
@@ -74,8 +171,8 @@ function TheVault() {
                         </div>
                         <hr/>
                         <div className="flex flex-col justify-center items-center h-full mb-4 lg:mb-0 lg:space-y-3">
-                            <h2 className="p-4 text-xl text-center font-bold lg:text-4xl">{useRupiahFormat(expense)}</h2>
-                            <button onClick={() => setExpensePopup(true)} className="font-bold text-white text-xs bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg px-10 py-2 cursor-pointer lg:text-base">Add</button>
+                            <h2 className="p-4 text-xl text-center font-bold lg:text-4xl">{rupiahFormat(expense)}</h2>
+                            <button onClick={() => setIsExpensePopupOpen(true)} className="font-bold text-white text-xs bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg px-10 py-2 cursor-pointer lg:text-base">Add</button>
                         </div>                        
                     </div>
                 </section>
@@ -86,7 +183,7 @@ function TheVault() {
                         </div>
                         <hr/>
                         <div className="flex flex-col justify-center items-center h-full mb-4 lg:mb-0 lg:space-y-3">
-                            <h2 className="p-4 text-xl text-center font-bold lg:text-4xl">{useRupiahFormat(totalMonthlyIncome)}</h2>
+                            <h2 className="p-4 text-xl text-center font-bold lg:text-4xl">{rupiahFormat(totalMonthlyIncome)}</h2>
                             <button onClick={() => router.push("/private/vault/monthly-income")} className="font-bold text-white text-xs bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg px-10 py-2 cursor-pointer lg:text-base">View</button>
                         </div>                        
                     </div>
@@ -98,7 +195,7 @@ function TheVault() {
                         </div>
                         <hr/>
                         <div className="flex flex-col justify-center items-center h-full mb-4 lg:mb-0 lg:space-y-3">
-                            <h2 className="p-4 text-xl text-center font-bold lg:text-4xl">{useRupiahFormat(totalMonthlyExpense)}</h2>
+                            <h2 className="p-4 text-xl text-center font-bold lg:text-4xl">{rupiahFormat(totalMonthlyExpense)}</h2>
                             <button onClick={() => router.push("/private/vault/monthly-expense")} className="font-bold text-white text-xs bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg px-10 py-2 cursor-pointer lg:text-base">View</button>
                         </div>                        
                     </div>
@@ -159,12 +256,12 @@ function TheVault() {
                                             <td>{new Date(transaction.recorded_date).toLocaleDateString()}</td>
                                             <td>{new Date(transaction.recorded_date).toLocaleTimeString()}</td>
                                             <td>{transaction.transaction_name}</td>
-                                            <td className={`${transaction.transaction_name === 'Expense' ? 'text-red-600' : 'text-green-600'}`}>{useRupiahFormat(transaction.amount)}</td>
+                                            <td className={`${transaction.transaction_name === 'Expense' ? 'text-red-600' : 'text-green-600'}`}>{rupiahFormat(transaction.amount)}</td>
                                         </tr>
                                     ))}
                                     <tr className="*:text-xs *:pt-3 sm:*:text-base">
                                         <td colSpan={3} className="font-semibold text-center border-t border-black">Total Amount</td>
-                                        <td className="font-semibold text-center border-t border-black">{useRupiahFormat(transactions.reduce((acc, transaction) => acc + transaction.amount, 0))}</td>
+                                        <td className="font-semibold text-center border-t border-black">{rupiahFormat(transactions.reduce((acc, transaction) => acc + transaction.amount, 0))}</td>
                                     </tr>
                                 </tbody>
                             </table>

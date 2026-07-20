@@ -1,29 +1,71 @@
 "use client"
 
-import Delete from "@/assets/profile/delete.svg";
+import Delete from "@/assets/vault/delete.svg";
 
 import { useState } from "react";
+
 import Image from "next/image";
 
 import { useAuth } from "@/providers/AuthProvider";
 
-import useMonthlyIncome from "@/hooks/useMonthlyIncome";
+import useFetchMonthlyIncome from "@/hooks/useMonthlyIncome";
 
-import MonthlyIncomePopup from "@/components/MonthlyIncomePopup";
-import Popup from "@/components/Popup";
+import MonthlyPopup from "@/components/MonthlyPopup";
+import ConfirmationPopup from "@/components/ConfirmationPopup";
+
+import { rupiahFormat } from "@/utils/currencyFormat";
 
 import { toast } from "react-toastify";
 
-import { useRupiahFormat } from "@/utils/currencyFormat";
-
 import { api } from "@/lib/api";
 
-function MonthlyIncome() {
+function MonthlyIncomeList() {
     const { user } = useAuth();
-    const { monthlyIncome, setMonthlyIncome } = useMonthlyIncome();
+    const { monthlyIncome, setMonthlyIncome } = useFetchMonthlyIncome();
     
+    const [name, setName] = useState<string>('');
+    const [amount, setAmount] = useState<number>(0);
+    const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [isIncomePopupOpen, setIsIncomePopupOpen] = useState<boolean>(false);
     const [isDeletePopupOpen, setIsDeletePopupOpen] = useState<number | null>(null);
+
+    const MIN_AMOUNT = 0;
+
+    const insertIncome = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        if(amount <= MIN_AMOUNT) {
+            toast.error("Amount must not be zero!");
+        }
+
+        if(isSubmitting) {
+            return;
+        }
+
+        try {
+            const insertedIncome = await api.post(`/api/monthlyIncome/insert`, {
+                user_id: user?.id,
+                name: name,
+                amount: amount
+            })
+
+            setIsSubmitting(true);
+
+            if(insertedIncome.status === 200 || insertedIncome.status === 201) {
+                setMonthlyIncome(prev => [...prev, insertedIncome.data.data]);
+                setName('');
+                setAmount(0);
+                setIsIncomePopupOpen(false);
+
+                toast.success("Successfully added monthly income!");
+            }
+        } catch (error) {
+            console.error("Error in inserting your income", error);
+            toast.error("There is an error while inserting your income, try again!");            
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
 
     const deleteIncome = async (id: string) => {
         try {
@@ -50,14 +92,20 @@ function MonthlyIncome() {
     return(
         <>
             { isIncomePopupOpen &&
-                <MonthlyIncomePopup
+                <MonthlyPopup
+                    title={"Insert Monthly Income"}
+                    name={name}
+                    amount={amount}
+                    setName={setName}
+                    setAmount={setAmount}
                     setIsPopupOpen={setIsIncomePopupOpen}
-                    setMonthlyIncome={setMonthlyIncome}
+                    handleSubmit={insertIncome}
+                    isSubmitting={isSubmitting}
                 />
             }
             
             <main className="frame-padding space-y-3 h-screen">
-                <button onClick={() => setIsIncomePopupOpen(true)} className="fixed right-5 bottom-2 -translate-1/2 cursor-pointer main-button">Add Income</button>
+                <button onClick={() => setIsIncomePopupOpen(true)} className="fixed right-0 bottom-2 -translate-1/2 cursor-pointer main-button md:py-2 md:px-5">Add Income</button>
                 <section className="bg-[#FFFDF0] px-7 py-4 mb-7 w-full rounded-2xl shadow-lg">
                     <h1 className="w-full text-center font-bold lg:text-xl">Monthly Income List</h1>
                     <hr className="my-2"/>
@@ -74,19 +122,19 @@ function MonthlyIncome() {
                                     { monthlyIncome.map((income, index) => (
                                         <tr key={index} className="*:text-sm *:py-1 *:text-center xl:*:text-base">
                                             <td>{income.name}</td>
-                                            <td>{useRupiahFormat(income.amount)}</td>
+                                            <td>{rupiahFormat(income.amount)}</td>
                                             <td>
                                                 <Image 
                                                     src={Delete} 
                                                     alt="Delete Item"
                                                     onClick={() => setIsDeletePopupOpen(index)} 
-                                                    className="cursor-pointer mx-auto"
+                                                    className="bg-red-600 cursor-pointer mx-auto px-1.5 py-1 rounded-md h-auto hover:bg-red-700 lg:w-[31px]"
                                                     width={23} 
                                                     height={23}
                                                 />
 
                                                 { isDeletePopupOpen === index &&
-                                                    <Popup
+                                                    <ConfirmationPopup
                                                         title="Delete Income Item"
                                                         text={`Are you sure you want to delete income "${income.name}"? You will have to add again later if you change your mind.`}
                                                         onConfirm={() => deleteIncome(income.id)}
@@ -105,4 +153,4 @@ function MonthlyIncome() {
     )
 }
 
-export default MonthlyIncome;
+export default MonthlyIncomeList;

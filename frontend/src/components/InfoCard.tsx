@@ -4,11 +4,11 @@ import { useState } from 'react';
 
 import { InformationIcon } from './SVGIcons';
 
-interface InfoCard {
+interface InfoCardProps {
     text: string
 }
 
-function InfoCard({ text }: InfoCard) {
+function InfoCardProps({ text }: InfoCardProps) {
     const [visible, setVisible] = useState(false)
 
     const toggleCard = () => setVisible(!visible);
@@ -30,4 +30,4 @@ function InfoCard({ text }: InfoCard) {
     )
 }
 
-export default InfoCard;
+export default InfoCardProps;

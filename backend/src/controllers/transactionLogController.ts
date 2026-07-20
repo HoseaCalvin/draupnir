@@ -3,29 +3,13 @@ import { Request, Response } from "express";
 import { sql } from "../configs/database";
 import { failedMessage, serverErrorMessage, successMessage } from "../misc/messages";
 
-export const insertTransactionLog = async (req: Request, res: Response) => {
-    const { user_id, recorded_date, transaction_name, amount, category_id } = req.body;
-
-    if(!user_id || !recorded_date || !transaction_name || !category_id) {
-        return failedMessage(res, "All fields are required!");
-    }
-
-    try {
-        const insertLog = await sql`
-            INSERT INTO transaction_log (user_id, recorded_date, transaction_name, amount, category_id)
-                VALUES (${user_id}, ${recorded_date}, ${transaction_name}, ${amount}, ${category_id})
-            RETURNING 
-                *
-        `
-
-        if(!insertLog) {
-            return failedMessage(res, "Failed to insert a transaction log!");
-        }
-
-        successMessage(res, insertLog);
-    } catch (error) {
-        serverErrorMessage(res);
-    }
+export const insertTransactionLog = async (user_id: string, recorded_date: Date, transaction_name: string, amount: number, category_id: string) => {
+    return await sql`
+        INSERT INTO transaction_log (user_id, recorded_date, transaction_name, amount, category_id)
+            VALUES (${user_id}, ${recorded_date}, ${transaction_name}, ${amount}, ${category_id})
+        RETURNING
+            *
+    `
 }
 
 export const getAllTransactionLog = async (req: Request, res: Response) => {

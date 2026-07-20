@@ -14,7 +14,7 @@ export type Goal = {
 
 function useGoal() {
     const { user, authLoading } = useAuth();
-    const [goals, setGoals] = useState<Goal[] | null>(null);
+    const [goals, setGoals] = useState<Goal[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
@@ -29,7 +29,7 @@ function useGoal() {
                 setGoals(response.data.data);
             } catch (error) {
                 console.error("Error in fetching user goal data!", error);
-                setGoals(null);
+                setGoals([]);
             } finally {
                 setLoading(false);
             }
@@ -38,7 +38,7 @@ function useGoal() {
         fetchGoals();        
     }, [user?.id, authLoading]);
 
-    return { goals, loading };
+    return { goals, setGoals, loading };
 }
 
 export default useGoal;

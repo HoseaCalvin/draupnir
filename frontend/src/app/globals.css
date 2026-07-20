@@ -36,16 +36,15 @@ body {
   @apply font-bold text-white bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg cursor-pointer;
 }
 
-.main-button-disabled {
-  @apply font-bold text-white bg-[#C39F4A] rounded-lg cursor-not-allowed opacity-50;
-}
-
 .goal-target-text {
   @apply bg-white text-gray-400 rounded-xl p-3.5 inset-shadow-md;
 }
 
-/* DatePicker Styles */
+.animate {
+  @apply transition-all duration-200 ease-in-out;
+}
 
+/* DatePicker Styles */
 .react-datepicker {
   @apply border-2 rounded-lg border-black;
 }
