@@ -49,9 +49,9 @@ export const verifyUser = async (req: Request, res: Response) => {
 }
 
 export const register = async (req: Request, res: Response) => {
-    const { username, email, dob, gender, password } = req.body;
+    const { username, email, password } = req.body;
 
-    if(!username || !email || !dob || !gender || !password) {
+    if(!username || !email || !password) {
         return failedMessage(res, "All fields are required!");
     }
 
@@ -67,8 +67,8 @@ export const register = async (req: Request, res: Response) => {
 
     try {
         const insertUser = await sql`
-            INSERT INTO "user" (username, email, dob, gender, password)
-                VALUES (${username}, ${email}, ${dob}, ${gender}, ${hashedPassword})
+            INSERT INTO "user" (username, email, password)
+                VALUES (${username}, ${email}, ${hashedPassword})
             RETURNING
                 "id";
         `
@@ -104,9 +104,9 @@ export const getAllUsers = async () => {
 
 export const updateUserBiodata = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { username, dob, gender } = req.body;
+    const { username, email } = req.body;
 
-    if(!username || !dob || !gender) {
+    if(!username || !email) {
         return failedMessage(res, "All fields are required!");
     }
 
@@ -114,13 +114,16 @@ export const updateUserBiodata = async (req: Request, res: Response) => {
         return failedMessage(res, "Username must not be empty!");
     }
 
+    if(email.trim().length <= 0) {
+        return failedMessage(res, "Email must not be empty!");
+    }
+
     try {
         const updateUserBiodata = await sql`
             UPDATE "user"
             SET
                 username = ${username},
-                dob = ${dob},
-                gender = ${gender}
+                email = ${email}
             WHERE
                 id = ${id}
             RETURNING 
@@ -132,39 +135,6 @@ export const updateUserBiodata = async (req: Request, res: Response) => {
         }
 
         successMessage(res, updateUserBiodata[0]);
-    } catch (error) {
-        serverErrorMessage(res);
-    }
-}
-
-export const updateUserEmail = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { email } = req.body;
-    
-    if(!id || !email) {
-        return failedMessage(res, "All fields are required!");
-    }
-
-    if(email.trim().length <= 0) {
-        return failedMessage(res, "Email must not be empty!");
-    }
-
-    try {
-        const updateUserEmail = await sql`
-            UPDATE "user"
-            SET
-                email = ${email}
-            WHERE
-                id = ${id}
-            RETURNING 
-                *
-        `
-
-        if(updateUserEmail.length === 0) {
-            return notFoundMesage(res, "User not found!");
-        }
-
-        successMessage(res, updateUserEmail[0]);        
     } catch (error) {
         serverErrorMessage(res);
     }

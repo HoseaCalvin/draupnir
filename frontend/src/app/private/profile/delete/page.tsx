@@ -86,18 +86,39 @@ function DeleteProfile() {
                     <hr/>
                     <form onSubmit={handleDeleteProfile} className="space-y-3 py-4">
                         <section className="space-y-1 md:w-[65%]">
-                            <p className="text-xs font-bold lg:text-sm">Verify Email</p>
-                            <input type="email" value={verifyEmail} onChange={(e) => setVerifyEmail(e.target.value)} className="bg-white block text-sm w-full border-2 rounded-lg p-1 md:text-base md:p-2"/>
+                            <p className="text-xs lg:text-sm">Verify Email</p>
+                            <input 
+                                type="email" 
+                                value={verifyEmail} 
+                                onChange={(e) => setVerifyEmail(e.target.value)} 
+                                className="bg-white block text-sm w-full border-2 border-[#CBCBCB] rounded-lg p-1 md:text-base md:p-2"
+                            />
                         </section>
                         <section className="space-y-1 md:w-[65%]">
-                            <p className="text-xs font-bold lg:text-sm">Verify Password</p>
-                            <input type="password" value={verifyPassword} onChange={(e) => setVerifyPassword(e.target.value)} className="bg-white block text-sm w-full border-2 rounded-lg p-1 md:text-base md:p-2"/>
+                            <p className="text-xs lg:text-sm">Verify Password</p>
+                            <input 
+                                type="password" 
+                                value={verifyPassword} 
+                                onChange={(e) => setVerifyPassword(e.target.value)}
+                                className="bg-white block text-sm w-full border-2 border-[#CBCBCB] rounded-lg p-1 md:text-base md:p-2"
+                            />
                         </section>
                         <section className="flex gap-x-2 items-center py-2 space-y-1">
-                            <input type="checkbox" checked={confirmDelete} onChange={(e) => setConfirmDelete(e.target.checked)} className="ml-1 my-auto scale-125 md:scale-150"/>
-                            <label className="text-xs font-bold lg:text-sm">I understand that this action is irreversible and cannot be undone.</label>
+                            <input 
+                                type="checkbox" 
+                                checked={confirmDelete} 
+                                onChange={(e) => setConfirmDelete(e.target.checked)} 
+                                className="border-2 border-[#CBCBCB] ml-1 my-auto scale-125 md:scale-150"
+                            />
+                            <label className="text-xs lg:text-sm">I understand that this action is irreversible and cannot be undone.</label>
                         </section>
-                        <button type="submit" disabled={!confirmDelete} className={`bg-[#C39F4A] font-bold text-white rounded-lg py-1.5 mt-4 px-5 flex ${confirmDelete ? 'cursor-pointer hover:bg-[#9c854e]' : 'opacity-50 cursor-not-allowed'}`}>Delete Profile</button>
+                        <button 
+                            type="submit" 
+                            disabled={!confirmDelete} 
+                            className={`bg-[#C39F4A] rounded-lg font-bold text-white animate px-5 py-1.5 text-sm mt-4 flex ${confirmDelete ? 'cursor-pointer hover:bg-[#9c854e]' : 'opacity-50 cursor-not-allowed'} md:text-base lg:mt-6 lg:px-6`}
+                        >
+                            Delete Profile
+                        </button>
                     </form>
                 </div>
             </section> 

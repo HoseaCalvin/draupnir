@@ -1,44 +1,193 @@
 "use client"
 
-import ProfilePicture from "@/assets/navbar/viking-face.svg";
-
-import { useState, useEffect } from "react";
-import Image from "next/image";
+import { useState, useEffect, useId, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
 import { toast } from "react-toastify";
-import { DatePicker } from "react-datepicker";
+
+import { Lock, User, type LucideIcon } from "lucide-react";
 
 import { useAuth } from "@/providers/AuthProvider";
 
 import { api } from "@/lib/api"; 
 
-function EditProfile() {
-    const { user, setUser } = useAuth();
+interface Tab {
+    id: string;
+    label: string;
+    icon: LucideIcon;
+}
 
-    const router = useRouter();
+interface PanelProps {
+  baseId: string;
+  id: string;
+  activeId: string;
+  children: ReactNode;
+}
+
+const tabs: Tab[] = [
+    { id: "biodata", label: "Biodata", icon: User },
+    { id: "password", label: "Password", icon: Lock },
+]
+
+function EditProfile() {
+    const [activeTab, setActiveTab] = useState<string>(tabs[0].id);
+    const baseId = useId();
+
+    return(
+        <main className="frame-padding space-y-5">
+            <div className="bg-[#FFFDF0] rounded-2xl shadow-lg">
+                <div className="mx-5 flex flex-col h-full">
+                    <div className="flex pt-3 pb-2 lg:pt-4 lg:pb-2.5">
+                        <h1 className="title-card">Edit Profile</h1>
+                    </div>
+                    <div role="tablist" aria-label="Edit Profile Tabs" className="border-b border-slate-400 flex gap-1">
+                        {tabs.map((tab, index) => {
+                            const selected = tab.id === activeTab;
+                            const Icon = tab.icon;
+                            return (
+                                <button
+                                    key={tab.id}
+                                    role="tab"
+                                    id={`${baseId}-tab-${index}`}
+                                    aria-selected={selected}
+                                    aria-controls={`${baseId}-panel-${index}`}
+                                    tabIndex={selected ? 0 : -1}
+                                    onClick={() => setActiveTab(tab.id)}
+                                    className={`relative flex items-center gap-0.5 px-2 py-2.5 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C39F4A] focus-visible:ring-offset-2 ${selected ? "text-[#C39F4A]" : "text-slate-400 hover:text-slate-800"} md:px-4 md:text-sm md:gap-2`}
+                                >
+                                    <Icon className="mr-2" />
+                                    {tab.label}
+                                    {selected && (
+                                        <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[#C39F4A]" />
+                                    )}
+                                </button>
+                            )
+                        })}
+                    </div>
+                </div>
+                <div className="px-6 pt-4 pb-7">
+                    <Panel baseId={baseId} id="biodata" activeId={activeTab}>
+                        <BiodataForm />
+                    </Panel>
+                    <Panel baseId={baseId} id="password" activeId={activeTab}>
+                        <PasswordForm />
+                    </Panel>
+                </div>
+            </div>
+        </main>
+    )
+}
+
+function Panel({ baseId, id, activeId, children }: PanelProps) {
+    return(
+        <div
+            role="tabpanel"
+            id={`${baseId}-panel-${id}`}
+            aria-labelledby={`${baseId}-tab-${id}`}
+            hidden={id !== activeId}
+        >
+            {children}
+        </div>        
+    )
+}
+
+function BiodataForm() {
+    const { user, setUser } = useAuth();
 
     const [editUsername, setEditUsername] = useState<string>('');
     const [editEmail, setEditEmail] = useState<string>('');
-    const [editBirthdate, setEditBirthdate] = useState<Date | null>(null);
-    const [editGender, setEditGender] = useState<string>('');
-    const [editPassword, setEditPassword] = useState<string>('');
-    const [retypePassword, setRetypePassword] = useState<string>('');
-    const [verifyPasswordForPassword, setVerifyPasswordForPassword] = useState<string>('');
-    const [verifyPasswordForEmail, setVerifyPasswordForEmail] = useState<string>('');
+    const [error, setError] = useState<boolean>(false);
+
+    const router = useRouter();
+
+    const isUsernameError = error && editUsername.trim().length <= 0;
+    const isEmailError = error && editEmail.trim().length <= 0;
 
     useEffect(() => {
         const initializeValues = () => {
             if(user) {
                 setEditUsername(user?.username);
                 setEditEmail(user?.email);
-                setEditBirthdate(new Date(user?.dob));
-                setEditGender(user?.gender);
             }
         }
 
         initializeValues();
     }, [user]);
+
+    const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        if(!editUsername || editUsername.trim().length <= 0 || !editEmail || editEmail.trim().length <= 0) {
+            setError(true);
+            return;
+        }
+
+        try {
+            const response = await api.patch(`/api/users/biodata/update/${user?.id}`, {
+                username: editUsername,
+                email: editEmail
+            });
+
+            if(response.status === 201) {
+                setUser(response.data.data);
+
+                toast.success("Successfully updated profile!");
+                router.push("/private/home");
+            }
+        } catch (error) {
+            console.error("Error in updating your profile!", error);
+            toast.error("Error in updating your profile. Try again!");
+        } finally {
+            setError(false);
+        }
+    }
+
+    return(
+        <form onSubmit={handleUpdateProfile} className="space-y-3">
+            <section className="space-y-1 md:w-[65%]">
+                <p className="text-xs lg:text-sm">Username</p>
+                <input 
+                    type="text" value={editUsername} 
+                    onChange={(e) => setEditUsername(e.target.value)} 
+                    className={`bg-white block text-sm w-full border-2 ${isUsernameError ? 'border-red-500' : 'border-[#CBCBCB]'} rounded-lg p-1.5 md:text-base md:p-2`}
+                />
+                { isUsernameError && <p className="text-red-500 text-xs font-semibold">Username must not be empty!</p> }
+            </section>
+            <section className="space-y-1 md:w-[65%]">
+                <p className="text-xs lg:text-sm">Email</p>
+                <input 
+                    type="text" 
+                    value={editEmail} 
+                    onChange={(e) => setEditEmail(e.target.value)} 
+                    className={`bg-white block text-sm w-full border-2 ${isEmailError ? 'border-red-500' : 'border-[#CBCBCB]'} rounded-lg p-1.5 md:text-base md:p-2`}
+                />
+                { isEmailError && <p className="text-red-500 text-xs font-semibold">Email must not be empty!</p> }
+            </section>
+            <button 
+                type="submit" 
+                className="main-button animate px-5 py-1.5 text-sm mt-4 md:text-base lg:mt-6 lg:px-6"
+            >
+                Update
+            </button>
+        </form>
+    )
+}
+
+
+function PasswordForm() {
+    const { user } = useAuth();
+
+    const router = useRouter();
+
+    const [editPassword, setEditPassword] = useState<string>('');
+    const [retypePassword, setRetypePassword] = useState<string>('');
+    const [verifyPassword, setVerifyPassword] = useState<string>('');
+    const [isPasswordIncorrect, setIsPasswordInorrect] = useState<boolean>(false);
+    const [error, setError] = useState<boolean>(false);
+
+    const isPasswordError = error && editPassword.trim().length <= 0;
+    const isRetypePasswordError = error && (retypePassword.trim().length <= 0 || retypePassword !== editPassword);
+    const isVerifyPasswordError = error && verifyPassword.trim().length <= 0;
 
     const validatePassword = async (verifyPassword: string) => {
         if(!user) {
@@ -58,82 +207,21 @@ function EditProfile() {
         }        
     }
 
-    const handleUpdateProfile = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
-        try {
-            const response = await api.patch(`/api/users/biodata/update/${user?.id}`, {
-                username: editUsername,
-                dob: editBirthdate,
-                gender: editGender
-            });
-
-            if(response.status === 201) {
-                setUser(response.data.data);
-                toast.success("Successfully updated profile!");
-                router.push("/private/profile");
-            }
-        } catch (error) {
-            console.error("Error in updating your profile!", error);
-            toast.error("Error in updating your profile. Try again!");
-        }
-    }
-
-    const handleUpdateEmail = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-
-        if(!editEmail || editEmail.trim().length <= 0) {
-            toast.error("Email must not be empty!");
-            return;
-        }
-
-        if(verifyPasswordForEmail.trim().length <= 0) {
-            toast.error("Verify password must not be empty!");
-            return;
-        }
-     
-        if(!await validatePassword(verifyPasswordForEmail)) {
-            toast.error("Password is incorrect!");
-            return;
-        }
-
-        try {
-            const response = await api.patch(`/api/users/email/update/${user?.id}`, {
-                email: editEmail
-            });
-
-            if(response.status === 201) {
-                setUser(response.data.data);
-                toast.success("Successfully updated your email!");
-                router.push("/private/profile");
-            }
-        } catch (error) {
-            console.error("Error in updating your email!", error);
-            toast.error("Error in updating your email. Try again!");
-        }
-    }
-
     const handleUpdatePassword = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         
-        if(editPassword.trim().length > 0 && retypePassword.trim().length <= 0) {
-            toast.error("Passwords must not be empty!");
+        if(!editPassword || editPassword.trim().length <= 0 
+            || !retypePassword || retypePassword.trim().length <= 0 
+            || !verifyPassword || verifyPassword.trim().length <= 0) {
+            setError(true);
             return;
-        }
+        }        
         
-        if(editPassword.trim().length > 0 && retypePassword !== editPassword) {
-            toast.error("Passwords do not match!");
+        if(!await validatePassword(verifyPassword)) {
+            setIsPasswordInorrect(true);
             return;
-        }
-
-        if(verifyPasswordForPassword.trim().length <= 0) {
-            toast.error("Verify password must not be empty!");
-            return;
-        }
-        
-        if(!await validatePassword(verifyPasswordForPassword)) {
-            toast.error("Password is incorrect!");
-            return;
+        } else {
+            setIsPasswordInorrect(false);
         }
 
         try {
@@ -144,107 +232,56 @@ function EditProfile() {
 
             if(response.status === 201) {
                 toast.success("Successfully updated your password!");
-                router.push("/private/profile");
+                router.push("/private/home");
             }
         } catch (error) {
             console.error("Error in updating your credentials!", error);
             toast.error("Error in updating your credentials. Try again!");            
+        } finally {
+            setError(false);
         }
     }
 
     return(
-        <main className="frame-padding space-y-5">
-            <div className="bg-[#FFFDF0] col-span-2 relative rounded-2xl shadow-lg">
-                <div className="flex items-center gap-x-3 px-5 py-3 w-full md:py-4 lg:px-10">
-                    <Image 
-                        src={ProfilePicture} 
-                        alt="Profile Picture" 
-                        className="bg-[#C39F4A] border border-white rounded-full p-1.5 h-auto lg:mr-3 lg:w-[75px]"
-                        width={45} 
-                        height={45}
-                    />
-                    <div className="space-y-0.5">
-                        <h1 className="text-base md:text-xl lg:text-2xl">{editUsername}</h1>
-                        <h2 className="text-sm text-gray-400 md:text-base">{new Date(Date.now()).getFullYear() - new Date(editBirthdate ?? "Unknown birthdate").getFullYear()} year(s) old</h2>
-                    </div>
-                </div>
-            </div>
-            <div className="bg-[#FFFDF0] rounded-2xl shadow-lg">
-                <div className="mx-5 flex flex-col h-full">
-                    <div className="pt-3 pb-2 flex lg:py-4">
-                        <h1 className="title-card">Biodata</h1>
-                    </div>
-                    <hr className="px-2.5"/>
-                    <form onSubmit={handleUpdateProfile} className="space-y-3 pt-4 pb-4">
-                        <section className="space-y-1 md:w-[65%]">
-                            <p className="text-xs font-bold lg:text-sm">Username</p>
-                            <input type="text" value={editUsername} onChange={(e) => setEditUsername(e.target.value)} className="bg-white block text-sm w-full border-2 rounded-lg p-1 md:text-base md:p-2"/>
-                        </section>
-                        <section className="space-y-1 md:w-[65%]">
-                            <p className="text-xs font-bold lg:text-sm">Birthdate</p>
-                            <DatePicker
-                                selected={editBirthdate}
-                                onChange={setEditBirthdate}
-                                fixedHeight
-                                calendarClassName="custom-calendar"
-                                className="bg-white border-2 rounded-lg cursor-pointer py-1 px-2 w-full text-sm lg:text-base"
-                            />                                              
-                        </section>
-                        <section className="space-y-1 md:w-[65%]">
-                            <p className="text-xs font-bold lg:text-sm">Gender</p>
-                            <select className="bg-white block w-full border-2 text-sm rounded-lg p-1 cursor-pointer md:text-base md:p-2">
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Male">Prefer not to say</option>
-                            </select>
-                        </section>
-                        <button type="submit" className="main-button py-1.5 mt-6 px-5">Update Biodata</button>
-                    </form>
-                </div>
-            </div>
-            <div className="bg-[#FFFDF0] rounded-2xl shadow-lg">
-                <div className="mx-5 flex flex-col h-full">
-                    <div className="pt-3 pb-2 flex lg:py-4">
-                        <h1 className="title-card">Email</h1>
-                    </div>
-                    <hr className="px-2.5"/>
-                    <form onSubmit={handleUpdateEmail} className="space-y-3 pt-4 pb-4">
-                        <section className="space-y-1 md:w-[65%]">
-                            <p className="text-xs font-bold lg:text-sm">Email</p>
-                            <input type="text" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} className="bg-white block text-sm w-full border-2 rounded-lg p-1 md:text-base md:p-2"/>
-                        </section>
-                        <section className="space-y-1 md:w-[65%]">
-                            <p className="text-xs font-bold lg:text-sm">Verify Password</p>
-                            <input type="password" value={verifyPasswordForEmail} onChange={(e) => setVerifyPasswordForEmail(e.target.value)} className="bg-white block text-sm w-full border-2 rounded-lg p-1 md:text-base md:p-2"/>
-                        </section>
-                        <button type="submit" className="main-button py-1.5 mt-6 px-5">Update Email</button>                        
-                    </form>
-                </div>
-            </div>
-            <div className="bg-[#FFFDF0] rounded-2xl shadow-lg">
-                <div className="mx-5 flex flex-col h-full">
-                    <div className="pt-3 pb-2 flex lg:py-4">
-                        <h1 className="title-card">Password</h1>
-                    </div>
-                    <hr className="px-2.5"/>
-                    <form onSubmit={handleUpdatePassword} className="space-y-3 pt-4 pb-4">
-                        <section className="space-y-1 md:w-[65%]">
-                            <p className="text-xs font-bold lg:text-sm">Input New Password</p>
-                            <input type="password" value={editPassword} onChange={(e) => setEditPassword(e.target.value)} className="bg-white block text-sm w-full border-2 rounded-lg p-1 md:text-base md:p-2"/>
-                        </section>
-                        <section className="space-y-1 md:w-[65%]">
-                            <p className="text-xs font-bold lg:text-sm">Retype Password</p>
-                            <input type="password" value={retypePassword} onChange={(e) => setRetypePassword(e.target.value)} className="bg-white block text-sm w-full border-2 rounded-lg p-1 md:text-base md:p-2"/>
-                        </section>
-                        <section className="space-y-1 md:w-[65%]">
-                            <p className="text-xs font-bold lg:text-sm">Verify Password</p>
-                            <input type="password" value={verifyPasswordForPassword} onChange={(e) => setVerifyPasswordForPassword(e.target.value)} className="bg-white block text-sm w-full border-2 rounded-lg p-1 md:text-base md:p-2"/>
-                        </section>
-                        <button type="submit" className="main-button py-1.5 mt-6 px-5">Update Password</button>                        
-                    </form>
-                </div>
-            </div>
-        </main>
+        <form onSubmit={handleUpdatePassword} className="space-y-3">
+            <section className="space-y-1 md:w-[65%]">
+                <p className="text-xs lg:text-sm">Input New Password</p>
+                <input 
+                    type="password" 
+                    value={editPassword} 
+                    onChange={(e) => setEditPassword(e.target.value)} 
+                    className={`bg-white block text-sm w-full border-2 ${isPasswordError ? 'border-red-500' : 'border-[#CBCBCB]'} rounded-lg p-1.5 md:text-base md:p-2`}
+                />
+                { isPasswordError && <p className="text-red-500 text-xs font-semibold">Password must not be empty!</p> }
+            </section>
+            <section className="space-y-1 md:w-[65%]">
+                <p className="text-xs lg:text-sm">Retype Password</p>
+                <input 
+                    type="password" 
+                    value={retypePassword} 
+                    onChange={(e) => setRetypePassword(e.target.value)} 
+                    className={`bg-white block text-sm w-full border-2 ${isRetypePasswordError ? 'border-red-500' : 'border-[#CBCBCB]'} rounded-lg p-1.5 md:text-base md:p-2`}
+                />
+                { isRetypePasswordError && <p className="text-red-500 text-xs font-semibold">Passwords do not match!</p> }
+            </section>
+            <section className="space-y-1 md:w-[65%]">
+                <p className="text-xs lg:text-sm">Verify Password</p>
+                <input 
+                    type="password" 
+                    value={verifyPassword} 
+                    onChange={(e) => setVerifyPassword(e.target.value)} 
+                    className={`bg-white block text-sm w-full border-2 ${isVerifyPasswordError ? 'border-red-500' : 'border-[#CBCBCB]'} rounded-lg p-1.5 md:text-base md:p-2`}
+                />
+                { isVerifyPasswordError && <p className="text-red-500 text-xs font-semibold">Password must not be empty!</p> }
+            </section>
+                { isPasswordIncorrect && <p className="text-red-500 text-xs font-semibold">Password is incorrect!</p> }
+            <button 
+                type="submit" 
+                className="main-button animate px-5 py-1.5 text-sm mt-4 md:text-base lg:mt-6 lg:px-6"
+            >
+                Update
+            </button>                        
+        </form>
     )
 }
 

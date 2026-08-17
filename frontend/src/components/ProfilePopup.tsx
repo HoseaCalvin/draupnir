@@ -16,35 +16,39 @@ function ProfilePopup({ setIsPopupOpen }: ProfilePopupProps) {
     const { user, logout } = useAuth();
 
     return(
-        <div className="bg-[#FFFDF0] border border-[#C39F4A] shadow-2xl relative rounded-xl px-4.5 py-5 w-full max-w-[250px] h-auto sm:max-w-[500px]">
+        <div className="bg-[#C39F4A] shadow-2xl relative rounded-xl px-4.5 py-5 w-full max-w-[250px] h-auto md:max-w-[400px] lg:border lg:border-white">
             <button
                 type="button"
                 onClick={() => setIsPopupOpen(false)}
                 aria-label="Close"
-                className="absolute top-1.5 right-2.5 text-2xl rounded-full cursor-pointer animate hover:bg-[#F2EBC2]"
+                className="absolute top-1.5 right-2.5 text-2xl rounded-full cursor-pointer animate hover:bg-[#ab8844]"
             >
                 <X
-                    className="h-7 w-7 p-1"
+                    className="text-white h-7 w-7 p-1"
                 />
             </button>
-            <section className="space-y-1 my-2.5">
+            <section className="space-y-1 my-3.5">
                 <CircleUser  
                     aria-label="User Icon"
-                    className="block mx-auto bg-[#C39F4A] text-white rounded-full p-1.5 w-[60px] h-auto"
+                    className="block mx-auto bg-[#C39F4A] text-white rounded-full w-[65px] h-auto"
                 />
-                <h4 className="font-semibold text-center sm:text-lg">{user?.username}</h4>
+                <div>
+                    <h4 className="font-semibold text-center text-white text-base md:text-lg">{user?.username}</h4>
+                    <p className="text-center text-white text-xs md:text-base">{user?.email}</p>
+                </div>
             </section>
-            <section className="bg-white rounded-lg p-2.5">
-                <div className="flex flex-col divide-y divide-gray-300 *:hover:bg-gray-200 *:rounded-lg *:px-3 *:py-2.5">
+            <section className="bg-[#B8954E] rounded-lg p-2.5">
+                <div className="flex flex-col divide-y divide-white *:hover:bg-[#ab8844] *:px-3 *:py-2.5">
                     <Link
                         href={"/login"}
                         aria-label="Log Out"
                         onClick={logout}
-                        className="flex gap-x-3 text-sm animate"
+                        className="flex gap-x-3 text-sm text-white font-bold animate lg:text-base"
                     >
                         <UserRoundArrowLeftIcon
                             aria-label="Log Out Icon"
                             className="w-[20px] h-auto"
+                            strokeWidth={3}
                         />
                         Log Out
                     </Link>
@@ -52,7 +56,7 @@ function ProfilePopup({ setIsPopupOpen }: ProfilePopupProps) {
                         href={"/private/profile/edit"}
                         onClick={() => setIsPopupOpen(false)}
                         aria-label="Edit Profile"
-                        className="flex gap-x-3 text-sm animate"
+                        className="flex gap-x-3 text-white text-sm animate lg:text-base"
                     >
                         <UserRoundPen
                             aria-label="Edit Profile Icon"
@@ -64,7 +68,7 @@ function ProfilePopup({ setIsPopupOpen }: ProfilePopupProps) {
                         href={"/private/profile/delete"}
                         onClick={() => setIsPopupOpen(false)}
                         aria-label="Delete Profile"
-                        className="flex gap-x-3 text-sm animate"
+                        className="flex gap-x-3 text-white text-sm animate lg:text-base"
                     >
                         <UserRoundXIcon
                             aria-label="Delete Profile Icon"

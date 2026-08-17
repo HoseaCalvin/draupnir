@@ -1,9 +1,8 @@
 "use client"
 
-import Delete from "@/assets/vault/delete.svg";
+import { CirclePlus, Trash2 } from "lucide-react";
 
 import { useState } from "react";
-import Image from "next/image";
 
 import { useAuth } from "@/providers/AuthProvider";
 
@@ -25,16 +24,16 @@ function MonthlyExpenseList() {
     const [name, setName] = useState<string>('');
     const [amount, setAmount] = useState<number>(0);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    const [error, setError] = useState<boolean>(false);
     const [isExpensePopupOpen, setIsExpensePopupOpen] = useState<boolean>(false);
     const [isDeletePopupOpen, setIsDeletePopupOpen] = useState<number | null>(null);
-
-    const MIN_AMOUNT = 0;
 
     const insertExpense = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        if(amount <= MIN_AMOUNT) {
-            toast.error("Amount must not be zero!");
+        if(amount <= 0) {
+            setError(true);
+            return;
         }
 
         if(isSubmitting) {
@@ -50,7 +49,7 @@ function MonthlyExpenseList() {
 
             setIsSubmitting(true);
 
-            if(insertedExpense.status === 201) {
+            if(insertedExpense.status === 200 || insertedExpense.status === 201) {
                 setMonthlyExpense(prev => [...prev, insertedExpense.data.data]);
                 setName('');
                 setAmount(0);
@@ -62,6 +61,7 @@ function MonthlyExpenseList() {
             console.error("Error in inserting your expense", error);
             toast.error("There is an error while inserting your expense, try again!");            
         } finally {
+            setError(false);
             setIsSubmitting(false);
         }
     }
@@ -85,6 +85,9 @@ function MonthlyExpenseList() {
         } catch (error) {
             toast.error("Error in deleting an expense! Try again later.");
             console.error("Error in deleting an expense!", error);            
+        } finally {
+            setError(false);
+            setIsSubmitting(false);
         }
     }
 
@@ -95,9 +98,15 @@ function MonthlyExpenseList() {
                     title={"Insert Monthly Expense"}
                     name={name}
                     amount={amount}
+                    error={error}
                     setName={setName}
                     setAmount={setAmount}
-                    setIsPopupOpen={setIsExpensePopupOpen}
+                    setIsPopupOpen={() => {
+                        setName('');
+                        setAmount(0);
+                        setError(false);
+                        setIsExpensePopupOpen(false);
+                    }}
                     handleSubmit={insertExpense}
                     isSubmitting={isSubmitting}
                 />
@@ -106,9 +115,12 @@ function MonthlyExpenseList() {
             <main className="frame-padding space-y-3 h-screen">
                 <button 
                     onClick={() => setIsExpensePopupOpen(true)} 
-                    className="fixed right-1 bottom-2 -translate-1/2 cursor-pointer main-button md:py-2 md:px-5"
+                    className="main-button animate fixed -translate-1/2 bottom-15 -right-5 flex justify-center items-center cursor-pointer rounded-lg z-20 space-x-1.5 py-1.5 px-3 md:bottom-2 md:-right-9 lg:space-x-2 lg:px-5"
                 >
-                    Add Expense
+                    <CirclePlus
+                        className="text-white h-fit max-w-[35px] lg:max-w-[45px]"
+                    />
+                    <p className="text-white font-bold text-sm md:text-base lg:text-lg">Add</p>
                 </button>
                 <section className="bg-[#FFFDF0] px-7 py-4 mb-7 w-full rounded-2xl shadow-lg">
                     <h1 className="w-full text-center font-bold lg:text-xl">Monthly Expense List</h1>
@@ -128,13 +140,9 @@ function MonthlyExpenseList() {
                                         <td>{expense.name}</td>
                                         <td>{rupiahFormat(expense.amount)}</td>
                                         <td>
-                                            <Image 
-                                                src={Delete} 
-                                                alt="Delete Item"
+                                            <Trash2
                                                 onClick={() => setIsDeletePopupOpen(index)} 
-                                                className="bg-red-600 cursor-pointer mx-auto px-1.5 py-1 rounded-md h-auto hover:bg-red-700 lg:w-[31px]"
-                                                width={23} 
-                                                height={23}
+                                                className="bg-red-600 text-white animate cursor-pointer mx-auto px-1.5 py-1 rounded-md h-auto hover:bg-red-700 lg:w-[30px]"
                                             />
 
                                             { isDeletePopupOpen === index &&

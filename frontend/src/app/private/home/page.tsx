@@ -165,9 +165,9 @@ function Home() {
                             }
                             { isAiSummaryAvailable ?
                                 (
-                                    <button onClick={() => setOpenAiAnalysis(true)} className="main-button py-1.5 px-3 text-sm lg:text-base">View Analysis</button>
+                                    <button onClick={() => setOpenAiAnalysis(true)} className="main-button animate py-1.5 px-3 text-sm lg:text-base">View Analysis</button>
                                 ) : (
-                                    <button disabled={aiSummaryLoading || financeHistory.length === 0} onClick={generateAnalysis} className={`${aiSummaryLoading || financeHistory.length === 0 ? 'main-button-disabled' : 'main-button'} py-1.5 px-3 text-sm lg:text-base`}>Generate Analysis</button>
+                                    <button disabled={aiSummaryLoading || financeHistory.length === 0} onClick={generateAnalysis} className={`font-bold text-white bg-[#C39F4A] rounded-lg animate py-1.5 px-3 text-sm cursor-not-allowed disabled:opacity-60 lg:text-base`}>Generate Analysis</button>
                                 )
                             }
                         </div>

@@ -1,12 +1,9 @@
 "use client"
 
-import Target from "@/assets/goals/target.svg";
-import Deadline from "@/assets/goals/deadline.svg";
+import { useState, useEffect, useRef } from "react";
 
-import { useState, useEffect, useRef, SetStateAction } from "react";
-import Image from "next/image";
+import { Ellipsis, Pencil, Trash2, Crosshair, ClockAlert, CirclePlus } from "lucide-react";
 
-import { OptionsIcon, AddNoteIcon } from "@/components/SVGIcons";
 import ConfirmationPopup from "@/components/ConfirmationPopup";
 import GoalPopup from "@/components/GoalPopup";
 
@@ -37,6 +34,7 @@ function Goals() {
     const [targetAmount, setTargetAmount] = useState<number>(0);
     const [deadline, setDeadline] = useState<Date | null>(null);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    const [error, setError] = useState<boolean>(false);
 
     const [isCreateGoalCardOpen, setIsCreateGoalCardOpen] = useState<boolean>(false);
     const [isEditGoalCardOpen, setIsEditGoalCardOpen] = useState<Goal | null>(null);
@@ -86,18 +84,8 @@ function Goals() {
     const insertGoal = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        if(name.length <= 0) {
-            toast.error("Goal name must not be empty!");
-            return;
-        }
-
-        if(targetAmount <= 0) {
-            toast.error("Balance must not be less than or equal to 0!");
-            return;
-        }
-
-        if(deadline && deadline.getTime() < Date.now()) {
-            toast.error("Deadline must always be later than the current date!");
+        if(name.length <= 0 || targetAmount <= 0 || !deadline) {
+            setError(true);
             return;
         }
 
@@ -111,7 +99,7 @@ function Goals() {
                 deadline: deadline
             });
 
-            if(insertedGoal.status === 201 || insertedGoal.status === 200) {
+            if(insertedGoal.status === 200 || insertedGoal.status === 201) {
                 const goal = insertedGoal.data.data;
 
                 setGoals(prev => [goal, ...prev]);
@@ -128,26 +116,19 @@ function Goals() {
             toast.error("Error in creating a goal!");
         } finally {
             setIsSubmitting(false);
+            setError(false);
         }
     }
 
     const editGoal = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        if(name.length <= 0) {
-            toast.error("Goal name must not be empty!");
+        if(name.length <= 0 || targetAmount <= 0 || !deadline) {
+            setError(true);
             return;
         }
 
-        if(targetAmount <= 0) {
-            toast.error("Balance must not be less than or equal to 0!");
-            return;
-        }
-
-        if(deadline && deadline?.getTime() < Date.now()) {
-            toast.error("Deadline must always be later than the current date!");
-            return;
-        }
+        setIsSubmitting(true);
 
         try {
             const edit = await api.patch(`/api/goals/update`, {
@@ -168,6 +149,9 @@ function Goals() {
         } catch (error) {
             console.error("Error in updating a Goal!", error);
             toast.error("Error in updating your Goal!");
+        } finally {
+            setIsSubmitting(false);
+            setError(false);
         }
     }
 
@@ -197,10 +181,17 @@ function Goals() {
                     name={name}
                     targetAmount={targetAmount}
                     deadline={deadline}
+                    error={error}
                     setName={setName}
                     setTargetAmount={setTargetAmount}
                     setDeadline={setDeadline}
-                    setIsGoalCardOpen={() => setIsCreateGoalCardOpen(false)}
+                    setIsGoalCardOpen={() => {
+                        setName('');
+                        setTargetAmount(0);
+                        setDeadline(null);
+                        setIsCreateGoalCardOpen(false);
+                        setError(false);
+                    }}
                     handleSubmit={insertGoal}
                     isSubmitting={isSubmitting}
                 />
@@ -213,6 +204,7 @@ function Goals() {
                     name={name}
                     targetAmount={targetAmount}
                     deadline={deadline}
+                    error={error}
                     setName={setName}
                     setTargetAmount={setTargetAmount}
                     setDeadline={setDeadline}
@@ -221,6 +213,7 @@ function Goals() {
                         setTargetAmount(0);
                         setDeadline(null);
                         setIsEditGoalCardOpen(null);
+                        setError(false);
                     }}
                     handleSubmit={editGoal}
                     isSubmitting={isSubmitting}
@@ -230,33 +223,48 @@ function Goals() {
             { isDeleteGoalCardOpen &&
                 <ConfirmationPopup
                     title="Delete Goal"
-                    text={`You are about to delete "${isDeleteGoalCardOpen.name}" goal. Are you certain you want to do it? This will permanently delete the goal and cannot be restored!`}
+                    text={`You are about to delete "${isDeleteGoalCardOpen.name}" goal. Are you certain you want to do it? This will permanently delete the goal!`}
                     onConfirm={() => deleteGoal(isDeleteGoalCardOpen.id)}
                     onClose={() => setIsDeleteGoalCardOpen(null)}
                 />
             }
 
             <main className="flex flex-col frame-padding gap-y-7 lg:pb-0 lg:grid lg:grid-cols-2 lg:auto-rows-auto lg:gap-8">
-                <div className="main-button fixed -translate-1/2 bottom-15 -right-5 flex justify-center items-center cursor-pointer rounded-lg z-20 space-x-1.5 py-1.5 px-3 md:bottom-2 md:right-0 lg:space-x-2 lg:px-5" onClick={() => setIsCreateGoalCardOpen(true)}>
-                    <AddNoteIcon
-                        className="text-white w-full h-fit max-w-[30px] lg:max-w-[40px]"
+                <button 
+                    className="main-button animate fixed -translate-1/2 bottom-15 -right-5 flex justify-center items-center cursor-pointer rounded-lg z-20 space-x-1.5 py-1.5 px-3 md:bottom-2 md:right-0 lg:space-x-2 lg:px-5" 
+                    onClick={() => setIsCreateGoalCardOpen(true)}
+                >
+                    <CirclePlus
+                        className="text-white h-fit max-w-[35px] lg:max-w-[45px]"
                     />
                     <p className="text-white font-bold text-sm md:text-base lg:text-lg">Add</p>
-                </div>
+                </button>
                     { goals && goals?.length > 0 ? (
                             goals?.map((goal, index) => (
                                 <section key={index} className="relative bg-[#FFFDF0] rounded-2xl row-start-auto py-4 px-5 shadow-lg lg:py-6">
                                     <div className="flex justify-between items-center">
                                         <h1 className="px-1 text-sm font-bold text-[#7F7414] lg:text-lg">Goal #{index + 1}</h1>
-                                        <OptionsIcon 
+                                        <Ellipsis 
                                             aria-label="Options"
                                             onClick={() => setOpenOptions((goalIdx) => index === goalIdx ? null : index)} 
-                                            className="h-auto w-[25px] cursor-pointer p-1 rounded-lg hover:bg-[#F3F1E0] lg:w-[30px]"
+                                            className="h-auto w-[30px] cursor-pointer p-1 animate rounded-lg hover:bg-[#F3F1E0] lg:w-[35px]"
                                         />
                                         { openOptions === index &&
-                                            <div ref={optionRef} className="absolute border border-gray-300 -translate-y-1/2 -translate-x-1/2 top-22 -right-8 bg-[#FFFDF0] shadow-lg rounded-lg p-2 z-10 lg:top-25">
-                                                <p className="hover:bg-[#F3F1E0] py-1 px-1.5 rounded-md cursor-pointer lg:px-3" onClick={() => setIsEditGoalCardOpen(goal)}>Update</p>
-                                                <p className="hover:bg-[#F3F1E0] py-1 px-1.5 rounded-md cursor-pointer lg:px-3" onClick={() => setIsDeleteGoalCardOpen(goal)}>Delete</p>
+                                            <div ref={optionRef} className="absolute border border-gray-300 -translate-y-1/2 -translate-x-1/2 top-22 -right-11 bg-[#FFFDF0] shadow-lg rounded-lg p-2 z-10 lg:top-27">
+                                                <div className="flex items-center gap-x-3 hover:bg-[#F3F1E0] text-sm animate py-1 px-1.5 rounded-md cursor-pointer lg:text-base lg:gap-x-3.5 lg:px-3" onClick={() => setIsEditGoalCardOpen(goal)}>
+                                                    <Pencil
+                                                        strokeWidth={1.5}
+                                                        className="w-5 h-5"
+                                                    />
+                                                    Update
+                                                </div>
+                                                <div className="flex items-center gap-x-3 hover:bg-[#F3F1E0] text-sm animate py-1 px-1.5 rounded-md cursor-pointer lg:text-base lg:gap-x-3.5 lg:px-3" onClick={() => setIsDeleteGoalCardOpen(goal)}>
+                                                    <Trash2
+                                                        strokeWidth={1.5}
+                                                        className="w-5 h-5"
+                                                    />
+                                                    Delete
+                                                </div>
                                             </div>
                                         }
                                     </div>
@@ -278,9 +286,7 @@ function Goals() {
                                         <div className="flex flex-col justify-between gap-x-4 gap-y-4 w-full">
                                             <div className="flex items-center justify-between border-2 border-[#f5e9a5] shadow-sm rounded-lg w-full py-2.5 px-2.5 lg:px-3 lg:py-3">
                                                 <figure className="flex items-center gap-x-1.5 md:gap-x-2.5">
-                                                    <Image
-                                                        src={Target}
-                                                        alt="Target Icon"
+                                                    <Crosshair
                                                         className="h-auto w-[20px] lg:w-[25px]"
                                                     />
                                                     <h3 className="font-semibold text-center text-sm lg:text-lg">Target</h3>
@@ -289,9 +295,7 @@ function Goals() {
                                             </div>
                                             <div className="flex items-center justify-between border-2 border-[#f5e9a5] shadow-sm rounded-lg w-full py-2.5 px-2.5 lg:px-3 lg:py-3">
                                                 <figure className="flex items-center gap-x-1.5 md:gap-x-2.5">
-                                                    <Image
-                                                        src={Deadline}
-                                                        alt="Target Icon"
+                                                    <ClockAlert
                                                         className="h-auto w-[20px] lg:w-[25px]"
                                                     />
                                                     <h3 className="font-semibold text-center text-sm lg:text-lg">Deadline</h3>

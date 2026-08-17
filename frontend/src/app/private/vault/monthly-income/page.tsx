@@ -1,10 +1,8 @@
 "use client"
 
-import Delete from "@/assets/vault/delete.svg";
+import { CirclePlus, Trash2 } from "lucide-react";
 
 import { useState } from "react";
-
-import Image from "next/image";
 
 import { useAuth } from "@/providers/AuthProvider";
 
@@ -25,17 +23,17 @@ function MonthlyIncomeList() {
     
     const [name, setName] = useState<string>('');
     const [amount, setAmount] = useState<number>(0);
+    const [error, setError] = useState<boolean>(false);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
     const [isIncomePopupOpen, setIsIncomePopupOpen] = useState<boolean>(false);
     const [isDeletePopupOpen, setIsDeletePopupOpen] = useState<number | null>(null);
 
-    const MIN_AMOUNT = 0;
-
     const insertIncome = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        if(amount <= MIN_AMOUNT) {
-            toast.error("Amount must not be zero!");
+        if(name.length <= 0 || amount <= 0) {
+            setError(true);
+            return;
         }
 
         if(isSubmitting) {
@@ -63,6 +61,7 @@ function MonthlyIncomeList() {
             console.error("Error in inserting your income", error);
             toast.error("There is an error while inserting your income, try again!");            
         } finally {
+            setError(false);
             setIsSubmitting(false);
         }
     }
@@ -86,6 +85,8 @@ function MonthlyIncomeList() {
         } catch (error) {
             toast.error("Error in deleting an income! Try again later.");
             console.error("Error in deleting an income!", error);
+        } finally {
+            setError(false);
         }
     }
 
@@ -96,16 +97,30 @@ function MonthlyIncomeList() {
                     title={"Insert Monthly Income"}
                     name={name}
                     amount={amount}
+                    error={error}
                     setName={setName}
                     setAmount={setAmount}
-                    setIsPopupOpen={setIsIncomePopupOpen}
+                    setIsPopupOpen={() => {
+                        setName('');
+                        setAmount(0);
+                        setError(false);
+                        setIsIncomePopupOpen(false);
+                    }}
                     handleSubmit={insertIncome}
                     isSubmitting={isSubmitting}
                 />
             }
             
             <main className="frame-padding space-y-3 h-screen">
-                <button onClick={() => setIsIncomePopupOpen(true)} className="fixed right-0 bottom-2 -translate-1/2 cursor-pointer main-button md:py-2 md:px-5">Add Income</button>
+                <button 
+                    onClick={() => setIsIncomePopupOpen(true)} 
+                    className="main-button animate fixed -translate-1/2 bottom-15 -right-5 flex justify-center items-center cursor-pointer rounded-lg z-20 space-x-1.5 py-1.5 px-3 md:bottom-2 md:-right-9 lg:space-x-2 lg:px-5"
+                >
+                    <CirclePlus
+                        className="text-white h-fit max-w-[35px] lg:max-w-[45px]"
+                    />
+                    <p className="text-white font-bold text-sm md:text-base lg:text-lg">Add</p>
+                </button>
                 <section className="bg-[#FFFDF0] px-7 py-4 mb-7 w-full rounded-2xl shadow-lg">
                     <h1 className="w-full text-center font-bold lg:text-xl">Monthly Income List</h1>
                     <hr className="my-2"/>
@@ -124,13 +139,9 @@ function MonthlyIncomeList() {
                                             <td>{income.name}</td>
                                             <td>{rupiahFormat(income.amount)}</td>
                                             <td>
-                                                <Image 
-                                                    src={Delete} 
-                                                    alt="Delete Item"
+                                                <Trash2 
                                                     onClick={() => setIsDeletePopupOpen(index)} 
-                                                    className="bg-red-600 cursor-pointer mx-auto px-1.5 py-1 rounded-md h-auto hover:bg-red-700 lg:w-[31px]"
-                                                    width={23} 
-                                                    height={23}
+                                                    className="bg-red-600 text-white animate cursor-pointer mx-auto px-1.5 py-1 rounded-md h-auto hover:bg-red-700 lg:w-[30px]"
                                                 />
 
                                                 { isDeletePopupOpen === index &&

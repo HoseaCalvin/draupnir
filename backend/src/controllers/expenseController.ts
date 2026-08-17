@@ -31,7 +31,7 @@ export const updateExpense = async (req: Request, res: Response) => {
         return failedMessage(res, "User ID is missing!");
     }
 
-    if(!expense || expense <= 0) {
+    if(!expense) {
         return failedMessage(res, "Expense must have a value more than zero!");
     }
 

@@ -41,15 +41,15 @@ const isLastMonthProcessed = async (userId: string, name: string) => {
 }
 
 const markThisMonthAsProcessed = async (userId: string, name: string) => {
-    markAsProcessed(userId, name, 0);
+    return await markAsProcessed(userId, name, 0);
 }
 
 const markLastMonthAsProcessed = async (userId: string, name: string) => {
-    markAsProcessed(userId, name, 1);
+    return await markAsProcessed(userId, name, 1);
 }
 
 export const recordMonthlyFinancialReport = async () => { 
-    const users = await getAllUsers();
+    const users = await getAllUsers(); 
 
     for(const user of users) {
         if(await isLastMonthProcessed(user.id, 'monthly-financial-report')) {
@@ -58,13 +58,13 @@ export const recordMonthlyFinancialReport = async () => {
 
         try {
             await insertHistory(user.id); 
-            await markLastMonthAsProcessed(user.id, 'monthly-financial-report');
+            markLastMonthAsProcessed(user.id, 'monthly-financial-report');
 
             console.log(`Monthly financial report processed for user ${user.id}`);
         } catch (error) {
             console.error("Error occurred while recording monthly financial report!", error);
         }
-    }
+    } 
 }
 
 export const runMonthlyIncome = async () => {
@@ -77,7 +77,7 @@ export const runMonthlyIncome = async () => {
 
         try {
             await insertIncomeToBalance(user.id);
-            await markThisMonthAsProcessed(user.id, 'monthly-income');
+            markThisMonthAsProcessed(user.id, 'monthly-income');
 
             console.log(`Monthly income processed for user ${user.id}`);
         } catch (error) {
@@ -96,7 +96,7 @@ export const runMonthlyExpense = async () => {
 
         try {
             await reduceBalance(user.id);
-            await markThisMonthAsProcessed(user.id, 'monthly-expense');
+            markThisMonthAsProcessed(user.id, 'monthly-expense');
 
             console.log(`Monthly expense processed for user ${user.id}`);
         } catch (error) {

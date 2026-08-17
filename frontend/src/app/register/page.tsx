@@ -13,17 +13,25 @@ import "react-datepicker/dist/react-datepicker.css";
 
 function Register() {
     const [username, setUsername] = useState<string>('');
-    const [email, setEmail] = useState<string>('');
-    const [dob, setDob] = useState<Date | null>(null);
-    const [gender, setGender] = useState<string>('Prefer not to say');    
+    const [email, setEmail] = useState<string>(''); 
     const [password, setPassword] = useState<string>('');
+    const [error, setError] = useState<boolean>(false);
 
+    const isUsernameError = error && username.length <= 0;
+    const isEmailError = error && email.length <= 0;
+    const isPasswordError = error && password.length <= 0;
+    
     const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
+        if(!username || !email || !password) {
+            setError(true);
+            return;
+        }
+
         try {
             const register = await api.post(`/api/users/register`, { 
-                username, email, dob, gender, password
+                username, email, password
             }, {
                 withCredentials: false 
             });
@@ -34,20 +42,20 @@ function Register() {
 
             setUsername('');
             setEmail('');
-            setDob(null);
-            setGender('Prefer not to say');
             setPassword('');
         } catch (error) {
             toast.error("Error in creating your account. Please try again!");
             console.error("Error in creating your account!", error);
+        } finally {
+            setError(false);
         }
     }
     
     return(
-        <main className="bg-[#FFFDF0]">
-            <div className="flex justify-center items-center px-4 h-[100vh]">
-                <form onSubmit={handleRegister} className="bg-white w-md shadow-lg rounded-2xl h-full max-h-[90vh] md:max-h-[95vh]">
-                    <div className="flex justify-center p-2">
+        <main className="bg-white h-[100vh] md:bg-[#FFFDF0]">
+            <div className="flex flex-col justify-center items-center px-4 h-[100vh]">
+                <form onSubmit={handleRegister} className="w-full max-w-md h-fit py-8 md:bg-white md:shadow-lg md:rounded-2xl">
+                    <div className="flex justify-center">
                         <div>
                             <Image 
                                 src="/draupnir-with-text-logo.png" 
@@ -61,34 +69,34 @@ function Register() {
                     </div>
                     <div className="mx-6 mt-2.5 mb-4 space-y-0.5 md:mx-12">
                         <div className="relative">
-                            <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="rounded-sm w-full h-[40px] px-2 my-2 border-[1.5px] border-gray-600 lg:h-[45px] lg:p-2" required/>
-                            <label className="absolute top-[-5px] left-[10px] font-bold text-xs text-center bg-white p-1.5">Username</label>
+                            <input 
+                                type="text" 
+                                value={username} 
+                                onChange={(e) => setUsername(e.target.value)} 
+                                className={`rounded-sm w-full h-[40px] px-2 my-2 border-[1.5px] ${isUsernameError ? 'border-red-500' : 'border-gray-600'} lg:h-[45px] lg:p-2`}
+                            />
+                            <label className={`absolute top-[-5px] left-[10px] font-bold text-xs text-center bg-white ${isUsernameError ? 'text-red-500' : 'text-gray-600'} p-1.5`}>Username</label>
+                            { isUsernameError && <p className="text-red-500 text-xs font-semibold mb-3">Username must not be empty!</p> }
                         </div>
                         <div className="relative">
-                            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="rounded-sm w-full h-[40px] px-2 my-2 border-[1.5px] border-gray-600 lg:h-[45px] lg:p-2" required/>
-                            <label className="absolute top-[-5px] left-[10px] font-bold text-xs text-center bg-white p-1.5">Email</label>
+                            <input 
+                                type="email" 
+                                value={email} 
+                                onChange={(e) => setEmail(e.target.value)}
+                                className={`rounded-sm w-full h-[40px] px-2 my-2 border-[1.5px] ${isEmailError ? 'border-red-500' : 'border-gray-600'} lg:h-[45px] lg:p-2`} 
+                            />
+                            <label className={`absolute top-[-5px] left-[10px] font-bold text-xs text-center bg-white ${isEmailError ? 'text-red-500' : 'text-gray-600'} p-1.5`}>Email</label>
+                            { isEmailError && <p className="text-red-500 text-xs font-semibold mb-3">Email must not be empty!</p>}                        
                         </div>
                         <div className="relative">
-                            <DatePicker
-                                selected={dob}
-                                onChange={setDob}
-                                fixedHeight
-                                calendarClassName="custom-calendar"
-                                className="rounded-sm w-full h-[40px] px-2 my-2 border-[1.5px] border-gray-600 lg:h-[45px] lg:p-2"
-                            />                            
-                            <label className="absolute top-[-5px] left-[10px] font-bold text-xs text-center bg-white p-1.5">Date of Birth</label>                        
-                        </div>
-                        <div className="relative">
-                            <select onChange={(e) => setGender(e.target.value)} className="rounded-sm w-full h-[40px] px-2 my-2 border-[1.5px] border-gray-600 lg:h-[45px] lg:p-2" required>
-                                <option value="Male">Male</option>
-                                <option value="Female">Female</option>
-                                <option value="Prefer not to say">Prefer not to say</option>
-                            </select>
-                            <label className="absolute top-[-5px] left-[10px] font-bold text-xs text-center bg-white p-1.5">Gender</label>                        
-                        </div>
-                        <div className="relative">
-                            <input type="text" value={password} onChange={(e) => setPassword(e.target.value)} className="rounded-sm w-full h-[40px] px-2 my-2 border-[1.5px] border-gray-600 md:h-[45px] lg:p-2" required/>
-                            <label className="absolute top-[-5px] left-[10px] font-bold text-xs text-center bg-white p-1.5">Password</label>                        
+                            <input 
+                                type="text" 
+                                value={password} 
+                                onChange={(e) => setPassword(e.target.value)} 
+                                className={`rounded-sm w-full h-[40px] px-2 my-2 border-[1.5px] ${isPasswordError ? 'border-red-500' : 'border-gray-600'} md:h-[45px] lg:p-2`} 
+                            />
+                            <label className={`absolute top-[-5px] left-[10px] font-bold text-xs text-center bg-white ${isPasswordError ? 'text-red-500' : 'text-gray-600'} p-1.5`}>Password</label>                        
+                            { isPasswordError && <p className="text-red-500 text-xs font-semibold mb-3">Password must not be empty!</p>}                                                                  
                         </div>
                     </div>
                     <div className="flex flex-col justify-center w-full xl:mt-12">
@@ -97,9 +105,9 @@ function Register() {
                         </button>
                         <Link 
                             href='/login' 
-                            className="mt-2 text-center text-xs text-gray-500 hover:text-gray-950 ease-in duration-300 xl:text-sm"
+                            className="mt-2 text-center text-xs underline underline-offset-1 text-gray-500 hover:text-gray-950 ease-in duration-300 xl:text-sm"
                         >
-                            Already have an account? Click to login!
+                            Back to login
                         </Link>                
                     </div>
                 </form>

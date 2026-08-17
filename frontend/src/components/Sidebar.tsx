@@ -2,10 +2,6 @@
 
 import { House, Vault, Anvil, NotebookText, CircleUser } from "lucide-react";
 
-import Logout from "@/assets/navbar/logout.svg";
-import EditProfile from "@/assets/navbar/edit-profile.svg";
-import DeleteProfile from "@/assets/navbar/delete-profile.svg";
-
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -27,7 +23,7 @@ function Sidebar() {
     return(
         <>
             { isProfilePopupOpen &&
-                <div className="fixed -translate-x-1/2 -translate-y-1/2 z-40 w-full max-w-[300px] md:bottom-[-30px] md:left-[170px]">
+                <div className="fixed -translate-x-1/2 -translate-y-1/2 z-40 w-full max-w-[300px] bottom-[-60px] left-[170px]">
                     <ProfilePopup
                         setIsPopupOpen={setIsProfilePopupOpen}
                     />
@@ -48,7 +44,7 @@ function Sidebar() {
                     <ul className="p-2.5 my-5">
                         <Link 
                             href={path("home")} 
-                            className={`menu-item flex justify-between mx-2 inset-shadow-[1px_1px_3px_rgba(0,0,0,0.25)] ${isViewed(path("home"))}`}
+                            className={`menu-item animate flex justify-between mx-2 inset-shadow-[1px_1px_3px_rgba(0,0,0,0.25)] ${isViewed(path("home"))}`}
                         >
                             <House  
                                 aria-label="House Icon"
@@ -58,7 +54,7 @@ function Sidebar() {
                         </Link>
                         <Link 
                             href={path("vault")} 
-                            className={`menu-item flex justify-between mx-2 inset-shadow-[1px_1px_3px_rgba(0,0,0,0.25)] ${isViewed(path("vault"))}`}
+                            className={`menu-item animate flex justify-between mx-2 inset-shadow-[1px_1px_3px_rgba(0,0,0,0.25)] ${isViewed(path("vault"))}`}
                         >
                             <Vault  
                                 aria-label="Vault Icon"
@@ -68,7 +64,7 @@ function Sidebar() {
                         </Link>
                         <Link 
                             href={path("goals")} 
-                            className={`menu-item flex justify-between mx-2 inset-shadow-[1px_1px_3px_rgba(0,0,0,0.25)] ${isViewed(path("goals"))}`}
+                            className={`menu-item animate flex justify-between mx-2 inset-shadow-[1px_1px_3px_rgba(0,0,0,0.25)] ${isViewed(path("goals"))}`}
                         >
                             <Anvil  
                                 aria-label="Goals Icon"
@@ -78,7 +74,7 @@ function Sidebar() {
                         </Link>
                         <Link 
                             href={path("ledger")} 
-                            className={`menu-item flex justify-between mx-2 inset-shadow-[1px_1px_3px_rgba(0,0,0,0.25)] ${isViewed(path("ledger"))}`}
+                            className={`menu-item animate flex justify-between mx-2 inset-shadow-[1px_1px_3px_rgba(0,0,0,0.25)] ${isViewed(path("ledger"))}`}
                         >
                             <NotebookText  
                                 aria-label="Ledger Icon"
@@ -91,7 +87,7 @@ function Sidebar() {
                 <hr className="text-white"/>
                 <div 
                     onClick={() => setIsProfilePopupOpen(!isProfilePopupOpen)}
-                    className={`flex items-center justify-center pt-4 pb-3 ease-in-out duration-300 cursor-pointer ${isProfilePopupOpen ? 'bg-[#b38f3d]' : ''} ${isViewed(path("profile"))} lg:gap-x-1 `}
+                    className={`flex items-center justify-center pt-4 pb-3 ease-in-out duration-300 cursor-pointer animate hover:bg-[#b38f3d] ${isProfilePopupOpen ? 'bg-[#b38f3d]' : ''} ${isViewed(path("profile"))} lg:gap-x-1 `}
                 >
                     <div className="flex justify-between gap-x-2.5 lg:gap-x-3.5">
                         <CircleUser  

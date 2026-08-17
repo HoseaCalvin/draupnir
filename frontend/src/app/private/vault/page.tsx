@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { useRouter } from "next/navigation";
 
@@ -13,7 +13,7 @@ import { ResponsivePie } from '@nivo/pie';
 
 import useTotalMonthlyIncome from "@/hooks/useTotalMonthlyIncome";
 import useTotalMonthlyExpense from "@/hooks/useTotalMonthlyExpense";
-import useTransaction from "@/hooks/useTransaction";
+import useTransaction, { TransactionCategory } from "@/hooks/useTransaction";
 
 import { rupiahFormat } from "@/utils/currencyFormat";
 
@@ -28,27 +28,37 @@ function TheVault() {
     const { totalMonthlyExpense } = useTotalMonthlyExpense();
     const { transactions, loading, setTransactions } = useTransaction("this_month");
     
-    const [isCurrentBalancePopupOpen, setIsCurrentBalancePopupOpen] = useState<boolean>(false);
-    const [isExpensePopupOpen, setIsExpensePopupOpen] = useState<boolean>(false);
+    const [categories, setCategories] = useState<TransactionCategory[]>([]);
 
     const [amount, setAmount] = useState<number>(0);
     const [categoryId, setCategoryId] = useState<string>('');
+    const [error, setError] = useState<boolean>(false);
     const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+    const [isCurrentBalancePopupOpen, setIsCurrentBalancePopupOpen] = useState<boolean>(false);
+    const [isExpensePopupOpen, setIsExpensePopupOpen] = useState<boolean>(false);
     
     const router = useRouter();
 
-    const MIN_AMOUNT = 10000
+    useEffect(() => {
+        const handleGetTransactionCategories = async () => {
+            const transactionCategories = await api.get('/api/transactionCategory/get');
+
+            setCategories(transactionCategories.data.data);
+        }
+
+        handleGetTransactionCategories();
+    }, []);
 
     const handleCurrentBalanceSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        if(amount < MIN_AMOUNT) {
-            toast.error("Amount must be Rp10.000 or more!");
+        if(amount <= 0 || categoryId === '') {
+            setError(true);
             return;
         }
 
         if(isSubmitting) {
-            return
+            return;
         }
 
         setIsSubmitting(true);
@@ -73,6 +83,7 @@ function TheVault() {
             console.error("Error in updating log or balance!", error);
             toast.error("There is an error while updating your balance, try again!");            
         } finally {
+            setError(false);
             setIsSubmitting(false);
         }
     }
@@ -80,8 +91,8 @@ function TheVault() {
     const handleExpenseSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        if(amount < MIN_AMOUNT) {
-            toast.error("Amount must be Rp10.000 or more!");
+        if(amount <= 0 || categoryId === '') {
+            setError(true);
             return;
         }
 
@@ -113,6 +124,7 @@ function TheVault() {
             console.error("Error in updating log or balance", error);
             toast.error("There is an error while updating your log or balance, try again!");            
         } finally {
+            setError(false);
             setIsSubmitting(false);
         }
     }
@@ -129,10 +141,17 @@ function TheVault() {
                 <TransactionPopup
                     title="Input Balance"
                     balance={amount}
+                    categories={categories}
                     categoryId={categoryId}
+                    error={error}
                     setBalance={setAmount}
                     setCategoryId={setCategoryId}
-                    setIsPopupOpen={setIsCurrentBalancePopupOpen}
+                    setIsPopupOpen={() => {
+                        setCategoryId('');
+                        setAmount(0);
+                        setIsCurrentBalancePopupOpen(false);
+                        setError(false);
+                    }}
                     handleSubmit={handleCurrentBalanceSubmit}
                     isSubmitting={isSubmitting}
                 />
@@ -142,10 +161,17 @@ function TheVault() {
                 <TransactionPopup
                     title="Input Expense"
                     balance={amount}
+                    categories={categories}
                     categoryId={categoryId}
+                    error={error}
                     setBalance={setAmount}
                     setCategoryId={setCategoryId}
-                    setIsPopupOpen={setIsExpensePopupOpen}
+                    setIsPopupOpen={() => {
+                        setCategoryId('');
+                        setAmount(0);
+                        setIsExpensePopupOpen(false);
+                        setError(false);
+                    }}
                     handleSubmit={handleExpenseSubmit}
                     isSubmitting={isSubmitting}
                 />
@@ -160,7 +186,12 @@ function TheVault() {
                         <hr/>
                         <div className="flex flex-col justify-center items-center h-full mb-4 lg:mb-0 lg:space-y-3">
                             <h2 className="p-4 text-xl text-center font-bold lg:text-4xl">{rupiahFormat(currentBalance)}</h2>
-                            <button onClick={() => setIsCurrentBalancePopupOpen(true)} className="font-bold text-white text-xs bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg px-10 py-2 cursor-pointer lg:text-base">Add</button>
+                            <button 
+                                onClick={() => setIsCurrentBalancePopupOpen(true)} 
+                                className="main-button animate text-xs px-10 py-2 lg:text-base"
+                            >
+                                Add
+                            </button>
                         </div>
                     </div>
                 </section>
@@ -172,7 +203,12 @@ function TheVault() {
                         <hr/>
                         <div className="flex flex-col justify-center items-center h-full mb-4 lg:mb-0 lg:space-y-3">
                             <h2 className="p-4 text-xl text-center font-bold lg:text-4xl">{rupiahFormat(expense)}</h2>
-                            <button onClick={() => setIsExpensePopupOpen(true)} className="font-bold text-white text-xs bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg px-10 py-2 cursor-pointer lg:text-base">Add</button>
+                            <button 
+                                onClick={() => setIsExpensePopupOpen(true)} 
+                                className="main-button animate text-xs px-10 py-2 lg:text-base"
+                            >
+                                Add
+                            </button>
                         </div>                        
                     </div>
                 </section>
@@ -184,7 +220,12 @@ function TheVault() {
                         <hr/>
                         <div className="flex flex-col justify-center items-center h-full mb-4 lg:mb-0 lg:space-y-3">
                             <h2 className="p-4 text-xl text-center font-bold lg:text-4xl">{rupiahFormat(totalMonthlyIncome)}</h2>
-                            <button onClick={() => router.push("/private/vault/monthly-income")} className="font-bold text-white text-xs bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg px-10 py-2 cursor-pointer lg:text-base">View</button>
+                            <button 
+                                onClick={() => router.push("/private/vault/monthly-income")} 
+                                className="main-button animate text-xs px-10 py-2 lg:text-base"
+                            >
+                                View
+                            </button>
                         </div>                        
                     </div>
                 </section>
@@ -196,7 +237,12 @@ function TheVault() {
                         <hr/>
                         <div className="flex flex-col justify-center items-center h-full mb-4 lg:mb-0 lg:space-y-3">
                             <h2 className="p-4 text-xl text-center font-bold lg:text-4xl">{rupiahFormat(totalMonthlyExpense)}</h2>
-                            <button onClick={() => router.push("/private/vault/monthly-expense")} className="font-bold text-white text-xs bg-[#C39F4A] hover:bg-[#9c854e] rounded-lg px-10 py-2 cursor-pointer lg:text-base">View</button>
+                            <button 
+                                onClick={() => router.push("/private/vault/monthly-expense")} 
+                                className="main-button animate text-xs px-10 py-2 lg:text-base"
+                            >
+                                View
+                            </button>
                         </div>                        
                     </div>
                 </section>

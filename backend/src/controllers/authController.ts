@@ -61,11 +61,14 @@ export const login = async (req: Request, res: Response) => {
                 }
             );
 
+            const TWELVE_HOURS_MS = 12 * 60 * 60 * 1000;
+
             res.cookie('token', token, {
                 httpOnly: true,
                 secure: false,
                 sameSite: 'lax',
-                path: '/'
+                path: '/',
+                maxAge: TWELVE_HOURS_MS
             });
 
             return res.status(200).json({
